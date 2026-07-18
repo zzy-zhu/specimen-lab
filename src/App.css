@@ -65,6 +65,28 @@
   align-items: flex-start;
 }
 
+/* ---- red cover variant (original poster identity) ---- */
+.screen--cover {
+  background: var(--paper);
+  color: var(--ink);
+}
+.exp-cards--cover { margin-top: 26px; }
+.exp-card--paper {
+  background: rgba(247, 245, 243, 0.6);
+  border: 1px solid var(--ink);
+  backdrop-filter: none;
+  color: var(--ink);
+}
+.exp-card--paper:hover {
+  border-color: var(--red);
+  background: var(--white);
+}
+.exp-card--paper .exp-card__no { color: var(--red); opacity: 1; }
+.exp-card--paper .exp-card__meta { color: var(--red); }
+.exp-card--paper .exp-card__go { color: var(--red); }
+.home-foot--cover .linklike { color: var(--ink); }
+.home-foot--cover .linklike.dim { color: var(--ink); opacity: 0.4; }
+
 /* ---- create specimen ---- */
 .specimen-capture {
   display: flex;
