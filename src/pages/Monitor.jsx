@@ -58,9 +58,38 @@ function Dashboard() {
   const [ai, setAi] = useState(null);
 
   const q = session.q ?? 0;
+  const st = session.state;
   const answeredQ = room.filter((p) => p.answers?.[q] != null).length;
-  const startTension = () => setSession({ state: "tension", q: 0 });
-  const nextQ = () => (q + 1 >= QUESTIONS.length ? setSession({ state: "twin" }) : setSession({ q: q + 1 }));
+  const ideaCount = room.filter((p) => (p.idea || "").trim()).length;
+  const shakeCount = room.filter((p) => p.shake != null).length;
+
+  const LABELS = {
+    lobby: "EVENT 01 · WAITING ROOM",
+    tension: `TENSION · Q${q + 1}/${QUESTIONS.length}`,
+    twin: "TWIN REVEAL",
+    "lab-lobby": "EVENT 02 · WAITING ROOM",
+    idea: "OPEN LAB · CAPTURE IDEA",
+    shake: "OPEN LAB · SHAKE TO CONNECT",
+    web: "WOOD WIDE WEB",
+  };
+  const NEXT_LABEL = {
+    lobby: "▶ Start Event 01 · Tension",
+    tension: q + 1 >= QUESTIONS.length ? "Reveal twins ▶" : "Next question ▶",
+    twin: "▶ Start Event 02 · Open Lab",
+    "lab-lobby": "Capture ideas ▶",
+    idea: "Shake to connect ▶",
+    shake: "Grow the web ▶",
+    web: "↺ Finish → Lobby",
+  };
+  const next = () => {
+    if (st === "lobby") return setSession({ state: "tension", q: 0 });
+    if (st === "tension") return q + 1 >= QUESTIONS.length ? setSession({ state: "twin" }) : setSession({ q: q + 1 });
+    if (st === "twin") return setSession({ state: "lab-lobby" });
+    if (st === "lab-lobby") return setSession({ state: "idea" });
+    if (st === "idea") return setSession({ state: "shake" });
+    if (st === "shake") return setSession({ state: "web" });
+    return setSession({ state: "lobby", q: 0 });
+  };
   const prevQ = () => setSession({ q: Math.max(0, q - 1) });
   const toLobby = () => setSession({ state: "lobby", q: 0 });
 
@@ -97,21 +126,18 @@ function Dashboard() {
         </div>
       </header>
 
-      {/* host control bar */}
+      {/* host control bar — walks the whole room through both events */}
       <div className="host-bar">
         <span className="host-bar__state mono">
-          SESSION: <b>{session.state === "lobby" ? "WAITING ROOM" : session.state === "tension" ? `TENSION · Q${q + 1}/${QUESTIONS.length}` : "TWIN REVEAL"}</b>
-          {session.state === "tension" && <span className="host-bar__ans"> · {answeredQ}/{room.length} answered</span>}
+          NOW: <b>{LABELS[st] || st}</b>
+          {st === "tension" && <span className="host-bar__ans"> · {answeredQ}/{room.length} answered</span>}
+          {st === "idea" && <span className="host-bar__ans"> · {ideaCount}/{room.length} ideas</span>}
+          {st === "shake" && <span className="host-bar__ans"> · {shakeCount}/{room.length} shook</span>}
         </span>
         <div className="host-bar__btns">
-          {session.state === "lobby" && <button className="host-btn go" onClick={startTension}>▶ Start Creative Tension</button>}
-          {session.state === "tension" && (
-            <>
-              <button className="host-btn" onClick={prevQ} disabled={q === 0}>◀ Prev</button>
-              <button className="host-btn go" onClick={nextQ}>{q + 1 >= QUESTIONS.length ? "Reveal twins ▶" : "Next question ▶"}</button>
-            </>
-          )}
-          {session.state !== "lobby" && <button className="host-btn" onClick={toLobby}>↺ Lobby</button>}
+          {st === "tension" && <button className="host-btn" onClick={prevQ} disabled={q === 0}>◀ Prev</button>}
+          <button className="host-btn go" onClick={next}>{NEXT_LABEL[st]}</button>
+          {st !== "lobby" && <button className="host-btn" onClick={toLobby}>↺ Lobby</button>}
         </div>
       </div>
 

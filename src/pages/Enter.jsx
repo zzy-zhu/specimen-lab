@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Wordmark } from "../components/Wordmark";
 import { useScene } from "../lib/atmosphere";
 import { DAY_CODE } from "../data/lab";
-import { unlockSession } from "../lib/store";
+import { unlockSession, getMe } from "../lib/store";
 
 /* Code-of-the-day gate. Arrives out of the black cover transition.
    Returning attendees can log in their saved ID instead. */
@@ -17,7 +17,7 @@ export function Enter() {
   const submit = () => {
     if (code.trim().toLowerCase() === DAY_CODE) {
       unlockSession();
-      nav("/session");
+      nav(getMe() ? "/menu" : "/create"); // create profile first, then menu
     } else {
       setErr(true);
     }

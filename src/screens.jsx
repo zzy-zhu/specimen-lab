@@ -46,6 +46,7 @@ export function Chrome({ part, progress = [], children, bgSeed = 7, onBack }) {
 /* ========================================================= */
 export function CreateSpecimen({ onCreate, onBack, existing, cta = "Enter →" }) {
   const [name, setName] = useState(existing?.name || "");
+  const [passcode, setPasscode] = useState("");
   const [image, setImage] = useState(existing?.image || null);
   const camRef = useRef(null);
   const upRef = useRef(null);
@@ -57,7 +58,7 @@ export function CreateSpecimen({ onCreate, onBack, existing, cta = "Enter →" }
     r.readAsDataURL(file);
   };
 
-  const ready = name.trim().length > 0;
+  const ready = name.trim().length > 0 && passcode.trim().length >= 4;
 
   return (
     <Chrome part="SPECIMEN.lab" progress={[]} bgSeed={5} onBack={onBack}>
@@ -77,13 +78,18 @@ export function CreateSpecimen({ onCreate, onBack, existing, cta = "Enter →" }
       <input ref={camRef} className="hidden-input" type="file" accept="image/*" capture="user" onChange={(e) => readFile(e.target.files?.[0])} />
       <input ref={upRef} className="hidden-input" type="file" accept="image/*" onChange={(e) => readFile(e.target.files?.[0])} />
 
-      <label className="stack gap-8" style={{ marginTop: 24 }}>
+      <label className="stack gap-8" style={{ marginTop: 22 }}>
         <span className="eyebrow">YOUR NAME</span>
         <input className="field field--big" placeholder="what should we call you?" value={name} maxLength={24} onChange={(e) => setName(e.target.value)} />
       </label>
 
+      <label className="stack gap-8" style={{ marginTop: 14 }}>
+        <span className="eyebrow">PASSCODE</span>
+        <input className="field" type="text" placeholder="min 4 chars — re-open your ID later" value={passcode} maxLength={24} onChange={(e) => setPasscode(e.target.value)} />
+      </label>
+
       <div className="footer-actions">
-        <button className="btn btn-primary" disabled={!ready} onClick={() => onCreate({ name: name.trim(), image })}>
+        <button className="btn btn-primary" disabled={!ready} onClick={() => onCreate({ name: name.trim(), passcode: passcode.trim(), image })}>
           {cta}
         </button>
       </div>

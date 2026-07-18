@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CreateSpecimen, Twin } from "../screens";
+import { Twin } from "../screens";
 import { WaterTension } from "../components/WaterTension";
-import { NameCard } from "../components/NameCard";
-import { Wordmark } from "../components/Wordmark";
+import { WaitingRoom } from "../components/WaitingRoom";
 import { useScene } from "../lib/atmosphere";
 import { useMe, useRoom, useSession } from "../lib/hooks";
 import { useTilt } from "../hooks/useTilt";
@@ -19,7 +18,7 @@ import { isSessionUnlocked } from "../lib/store";
 export function Session() {
   useScene({ tone: "space", accent: "aqua" });
   const nav = useNavigate();
-  const { me, create, patch } = useMe();
+  const { me, patch } = useMe();
   const room = useRoom();
   const session = useSession();
 
@@ -27,9 +26,10 @@ export function Session() {
   const tilt = useTilt(active && !!me);
   usePresence(me?.id, active && !!me);
 
-  // guard: need day code (or existing id)
+  // guard: need day code, then a profile
   useEffect(() => {
-    if (!isSessionUnlocked() && !me) nav("/enter", { replace: true });
+    if (!isSessionUnlocked()) nav("/enter", { replace: true });
+    else if (!me) nav("/create", { replace: true });
   }, [me, nav]);
 
   // record the current question's lean live as the host holds on it
@@ -59,31 +59,18 @@ export function Session() {
     return () => { alive = false; };
   }, [session.state, me, room]);
 
-  if (!me) {
-    return <CreateSpecimen cta="Enter the waiting room →" onBack={() => nav("/enter")} onCreate={(d) => create(d)} />;
-  }
+  if (!me) return null; // redirecting to /create
 
-  // ---- waiting room ----
-  if (session.state === "lobby") {
-    const count = room.length;
+  // ---- waiting room (Event 01 not yet started, or host is elsewhere) ----
+  if (session.state !== "tension" && session.state !== "twin") {
     return (
-      <motion.div className="screen screen--space" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <div className="topbar">
-          <Wordmark size={17} stacked color="var(--white)" />
-          <span className="eyebrow" style={{ color: "var(--white)" }}>WAITING ROOM</span>
-        </div>
-        <div className="grow center-col" style={{ justifyContent: "center", gap: 22 }}>
-          <span className="lobby-pulse" />
-          <h1 className="display" style={{ color: "var(--white)", textAlign: "center" }}>You're in.<br />Hold tight.</h1>
-          <p className="lede" style={{ color: "rgba(247,245,243,0.8)", textAlign: "center" }}>
-            The host will start the Creative Tension for everyone at once. Keep your phone in hand.
-          </p>
-          <span className="mono" style={{ color: "var(--aqua)" }}>◉ {count} specimens in the room</span>
-        </div>
-        <div style={{ marginTop: "auto" }}>
-          <NameCard person={{ ...me, role: "you" }} image={me.image} variant="self" caption="ready" />
-        </div>
-      </motion.div>
+      <WaitingRoom
+        me={me}
+        count={room.length}
+        tag="EVENT 01 · WAITING ROOM"
+        title={"Creative\nTension"}
+        sub="The host will start the Creative Tension for everyone at once. Keep your phone in hand."
+      />
     );
   }
 

@@ -13,6 +13,7 @@ import { SEED_PARTICIPANTS } from "../data/lab";
 const SPECIMENS = `rooms/${EVENT_ID}/specimens`;
 const SESSION = `rooms/${EVENT_ID}/session`;
 const ME_KEY = "specimen.lab.me.v2";
+const ME_REC = "specimen.lab.me.rec"; // full record, survives reload before RTDB loads
 const SESSION_KEY = "specimen.lab.session.ok";
 
 const PALETTE = ["#e5241c", "#12c9bc", "#0a0a0a"];
@@ -54,11 +55,21 @@ function keyFor(handle) {
 export function getMe() {
   const id = localStorage.getItem(ME_KEY);
   if (!id) return null;
-  return getAll().find((p) => p.id === id) || null;
+  const live = getAll().find((p) => p.id === id);
+  if (live) return live;
+  // fallback to the locally-cached record (before RTDB loads / offline)
+  try {
+    const rec = JSON.parse(localStorage.getItem(ME_REC));
+    if (rec && rec.id === id) return rec;
+  } catch { /* noop */ }
+  return null;
+}
+function saveMeRec(rec) {
+  try { localStorage.setItem(ME_REC, JSON.stringify(rec)); } catch { /* noop */ }
 }
 export function setMe(id) {
   if (id) localStorage.setItem(ME_KEY, id);
-  else localStorage.removeItem(ME_KEY);
+  else { localStorage.removeItem(ME_KEY); localStorage.removeItem(ME_REC); }
   notify();
 }
 
@@ -75,7 +86,7 @@ export function getById(id) {
 
 /* ---- writes ---- */
 /* simplified: just a name + selfie. id is generated (device-persistent). */
-export function createSpecimen({ name, image }) {
+export function createSpecimen({ name, image, passcode }) {
   const prevId = localStorage.getItem(ME_KEY);
   const existing = prevId && cache.find((p) => p.id === prevId);
   const slug = (name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "specimen";
@@ -84,6 +95,7 @@ export function createSpecimen({ name, image }) {
   const rec = {
     id,
     handle: existing?.handle || `${slug}-${rand}`,
+    passcode: passcode ?? existing?.passcode ?? "",
     name,
     image: image ?? existing?.image ?? null,
     role: "specimen",
@@ -98,6 +110,7 @@ export function createSpecimen({ name, image }) {
   };
   cache = [...cache.filter((p) => p.id !== id), rec];
   localStorage.setItem(ME_KEY, id);
+  saveMeRec(rec);
   notify();
   set(ref(db, `${SPECIMENS}/${id}`), rec).catch(() => {});
   return rec;
@@ -110,12 +123,17 @@ function hashStr(s) {
 }
 
 export function patchSpecimen(id, patch) {
-  const rec = cache.find((p) => p.id === id);
+  let rec = cache.find((p) => p.id === id);
   if (rec) {
     Object.assign(rec, patch);
     cache = [...cache];
-    notify();
   }
+  if (id === localStorage.getItem(ME_KEY)) {
+    // keep the local fallback record in sync
+    const base = rec || getMe() || { id };
+    saveMeRec({ ...base, ...patch });
+  }
+  notify();
   update(ref(db, `${SPECIMENS}/${id}`), patch).catch(() => {});
   return rec;
 }
@@ -141,6 +159,7 @@ export async function login(handle, passcode) {
   if (!rec) return { ok: false, reason: "not-found" };
   if ((rec.passcode || "") !== (passcode || "")) return { ok: false, reason: "bad-passcode" };
   localStorage.setItem(ME_KEY, id);
+  saveMeRec(rec);
   notify();
   return { ok: true, record: rec };
 }
@@ -165,6 +184,7 @@ export function deleteSpecimen(id) {
     remove(ref(db, `${SPECIMENS}/${id}`)).catch(() => {});
   }
   localStorage.removeItem(ME_KEY);
+  localStorage.removeItem(ME_REC);
   sessionStorage.removeItem(SESSION_KEY);
   notify();
 }

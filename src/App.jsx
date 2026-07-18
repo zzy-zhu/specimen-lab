@@ -4,6 +4,7 @@ import { Cover } from "./pages/Cover";
 import { About } from "./pages/About";
 import { Enter } from "./pages/Enter";
 import { Menu } from "./pages/Menu";
+import { Create } from "./pages/Create";
 import { Artists } from "./pages/Artists";
 import { Session } from "./pages/Session";
 import { TensionFlow } from "./pages/TensionFlow";
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="/" element={<Cover />} />
         <Route path="/about" element={<About />} />
         <Route path="/enter" element={<Enter />} />
+        <Route path="/create" element={<Create />} />
         <Route path="/menu" element={<Menu />} />
         <Route path="/session" element={<Session />} />
         <Route path="/artists" element={<Artists />} />

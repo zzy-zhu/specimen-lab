@@ -767,3 +767,8 @@
 }
 .host-btn.go { background: var(--red); border-color: var(--red); }
 .host-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* about IG row (two links) */
+.ig-row { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; align-items: flex-start; }
+.ig-follow--alt { border-color: rgba(30,234,219,0.5); }
+.ig-follow--alt:hover { border-color: var(--aqua); color: var(--aqua); }

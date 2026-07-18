@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Wordmark, FuturePixelMark } from "../components/Wordmark";
 import { useScene } from "../lib/atmosphere";
-import { INSTAGRAM } from "../data/artists";
+import { INSTAGRAM, INSTAGRAM_HANDLE, ANIMA_IG, ANIMA_HANDLE } from "../data/artists";
 
 function IgIcon() {
   return (
@@ -43,9 +43,14 @@ export function About() {
           Two quick phone rituals turn a room of strangers into a network.
         </p>
 
-        <a className="ig-follow" href={INSTAGRAM} target="_blank" rel="noreferrer">
-          <IgIcon /> follow @specimen.lab
-        </a>
+        <div className="ig-row">
+          <a className="ig-follow" href={INSTAGRAM} target="_blank" rel="noreferrer">
+            <IgIcon /> FuturePIXEL · {INSTAGRAM_HANDLE}
+          </a>
+          <a className="ig-follow ig-follow--alt" href={ANIMA_IG} target="_blank" rel="noreferrer">
+            <IgIcon /> collaborator · {ANIMA_HANDLE}
+          </a>
+        </div>
       </div>
 
       <div className="footer-actions">

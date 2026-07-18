@@ -1,6 +1,9 @@
 /* Today's Specimen.lab artists. Drop headshots at
    public/artists/<id>.jpg to fill the image slots. */
-export const INSTAGRAM = "https://instagram.com/specimen.lab";
+export const INSTAGRAM = "https://instagram.com/futurepixelhouse";
+export const INSTAGRAM_HANDLE = "@futurepixelhouse";
+export const ANIMA_IG = "https://instagram.com/anima.initiative";
+export const ANIMA_HANDLE = "@anima.initiative";
 export const LUMA = "https://luma.com/a5s7keps";
 
 export const ARTISTS = [
