@@ -8,7 +8,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
  * Desktop / no-sensor fallback: arrow keys nudge the tilt so the whole
  * flow is testable without a phone.
  */
-const MAX_GAMMA = 35; // degrees mapped to full deflection — gentle lean
+const MAX_GAMMA = 22; // degrees mapped to full deflection — sensitive lean
+const SMOOTH = 0.35; // low-pass smoothing toward the raw reading
 
 export function useTilt(active) {
   const [tilt, setTilt] = useState(0);
@@ -45,7 +46,8 @@ export function useTilt(active) {
       got = true;
       raw.current = e.gamma;
       const n = Math.max(-1, Math.min(1, e.gamma / MAX_GAMMA));
-      setTilt(n);
+      // low-pass smoothing for a steady, accurate lean
+      setTilt((prev) => prev + (n - prev) * SMOOTH);
     };
     window.addEventListener("deviceorientation", onOrient, true);
 

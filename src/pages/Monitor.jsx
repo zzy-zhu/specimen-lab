@@ -5,10 +5,10 @@ import { WoodWideWeb } from "../components/WoodWideWeb";
 import { LiveSwarm } from "../components/LiveSwarm";
 import { Wordmark, FuturePixelMark } from "../components/Wordmark";
 import { useScene, ListenButton } from "../lib/atmosphere";
-import { useRoom } from "../lib/hooks";
+import { useRoom, useSession } from "../lib/hooks";
 import { QUESTIONS } from "../data/lab";
 import { summarizeIdeas } from "../lib/ai";
-import { resetRoom } from "../lib/store";
+import { resetRoom, setSession } from "../lib/store";
 
 const PASSCODE = "specimen.lab2026";
 const KEY = "specimen.lab.monitor.ok";
@@ -54,7 +54,15 @@ function Dashboard() {
   const nav = useNavigate();
   useScene({ tone: "space", accent: "aqua" });
   const room = useRoom();
+  const session = useSession();
   const [ai, setAi] = useState(null);
+
+  const q = session.q ?? 0;
+  const answeredQ = room.filter((p) => p.answers?.[q] != null).length;
+  const startTension = () => setSession({ state: "tension", q: 0 });
+  const nextQ = () => (q + 1 >= QUESTIONS.length ? setSession({ state: "twin" }) : setSession({ q: q + 1 }));
+  const prevQ = () => setSession({ q: Math.max(0, q - 1) });
+  const toLobby = () => setSession({ state: "lobby", q: 0 });
 
   const withIdeas = useMemo(() => room.filter((p) => (p.idea || "").trim()), [room]);
   const p1 = room.filter((p) => p.part1Done || p.answers?.length).length;
@@ -88,6 +96,24 @@ function Dashboard() {
           <span className="mono monitor__stat"><b>{p2}</b> lab</span>
         </div>
       </header>
+
+      {/* host control bar */}
+      <div className="host-bar">
+        <span className="host-bar__state mono">
+          SESSION: <b>{session.state === "lobby" ? "WAITING ROOM" : session.state === "tension" ? `TENSION · Q${q + 1}/${QUESTIONS.length}` : "TWIN REVEAL"}</b>
+          {session.state === "tension" && <span className="host-bar__ans"> · {answeredQ}/{room.length} answered</span>}
+        </span>
+        <div className="host-bar__btns">
+          {session.state === "lobby" && <button className="host-btn go" onClick={startTension}>▶ Start Creative Tension</button>}
+          {session.state === "tension" && (
+            <>
+              <button className="host-btn" onClick={prevQ} disabled={q === 0}>◀ Prev</button>
+              <button className="host-btn go" onClick={nextQ}>{q + 1 >= QUESTIONS.length ? "Reveal twins ▶" : "Next question ▶"}</button>
+            </>
+          )}
+          {session.state !== "lobby" && <button className="host-btn" onClick={toLobby}>↺ Lobby</button>}
+        </div>
+      </div>
 
       <div className="monitor__grid">
         {/* left: live swarm hero + wood web */}

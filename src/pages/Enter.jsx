@@ -17,7 +17,7 @@ export function Enter() {
   const submit = () => {
     if (code.trim().toLowerCase() === DAY_CODE) {
       unlockSession();
-      nav("/menu");
+      nav("/session");
     } else {
       setErr(true);
     }

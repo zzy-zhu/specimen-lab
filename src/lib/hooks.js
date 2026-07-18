@@ -8,6 +8,13 @@ export function useRoom() {
   return all;
 }
 
+/** live host-controlled session state */
+export function useSession() {
+  const [session, setSession] = useState(() => store.getSession());
+  useEffect(() => store.subscribe(() => setSession(store.getSession())), []);
+  return session;
+}
+
 /** the current specimen + identity actions */
 export function useMe() {
   const [me, setMe] = useState(() => store.getMe());

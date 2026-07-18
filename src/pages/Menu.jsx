@@ -47,12 +47,12 @@ export function Menu() {
       </motion.div>
 
       <div className="exp-cards">
-        <motion.button variants={rise} className="exp-card" onClick={() => nav("/tension")}>
+        <motion.button variants={rise} className="exp-card" onClick={() => nav("/session")}>
           <span className="exp-card__no mono">01</span>
           <div className="exp-card__body">
             <h2>Creative Tension</h2>
-            <p>Who you are. Build a specimen, then answer four playful questions by tilting your phone. Meet your creative twin.</p>
-            <span className="exp-card__meta mono">{me?.part1Done ? "✓ completed · revisit" : "~2 min"}</span>
+            <p>Who you are. A guided, room-wide ritual — the host leads everyone through four tilt questions, together. Meet your creative twin.</p>
+            <span className="exp-card__meta mono">{me?.part1Done ? "✓ completed · rejoin" : "host-guided · live"}</span>
           </div>
           <span className="exp-card__go">→</span>
         </motion.button>

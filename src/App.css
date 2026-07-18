@@ -711,3 +711,59 @@
 .flip__label { color: var(--aqua); letter-spacing: 0.16em; }
 .flip__q { font-family: var(--sans); font-weight: 200; font-size: 64px; color: rgba(247,245,243,0.85); line-height: 1; }
 .flip__hint { color: rgba(247,245,243,0.5); }
+
+/* ---- simplified signup ---- */
+.specimen-avatar--big { width: 190px; height: 190px; cursor: pointer; }
+.specimen-avatar--big .mono { text-align: center; line-height: 1.5; opacity: 0.5; }
+.field--big { font-size: 18px; padding: 16px; text-align: center; }
+
+/* ---- water tension ---- */
+.water { flex: 1; display: flex; flex-direction: column; }
+.water__q { text-align: center; margin-top: 4px; }
+.water__glyph { font-size: 42px; display: block; }
+.water__prompt {
+  font-family: var(--sans); font-weight: 300;
+  font-size: clamp(30px, 9vw, 46px); text-transform: uppercase;
+  letter-spacing: -0.02em; color: var(--white); line-height: 1; margin-top: 8px;
+}
+.water__options { display: flex; justify-content: space-between; align-items: flex-start; margin: 20px 0 10px; gap: 10px; }
+.water__opt {
+  font-family: var(--sans); font-weight: 300; font-size: clamp(20px, 6.5vw, 32px);
+  color: rgba(247,245,243,0.4); text-transform: uppercase; max-width: 46%; line-height: 1;
+  transition: color 0.2s, transform 0.2s;
+}
+.water__opt--r { text-align: right; }
+.water__opt.on { color: var(--red); font-weight: 500; transform: scale(1.06); }
+.water__tank {
+  position: relative; flex: 1; min-height: 220px; margin-top: auto;
+  border: 1px solid rgba(247,245,243,0.35); border-radius: 16px; overflow: hidden;
+  background: rgba(255,255,255,0.03);
+}
+.water__svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.water__lean { position: absolute; bottom: 12px; left: 0; right: 0; text-align: center; color: var(--white); font-size: 11px; }
+
+/* ---- waiting room ---- */
+.lobby-pulse {
+  width: 58px; height: 58px; border-radius: 50%; border: 2px solid var(--aqua);
+  animation: lobbyPulse 1.8s ease-out infinite;
+}
+@keyframes lobbyPulse { 0% { transform: scale(0.7); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+.session-wait { display: block; text-align: center; color: rgba(247,245,243,0.45); margin-top: 14px; }
+.session-tension { padding-bottom: 22px; }
+
+/* ---- monitor host controls ---- */
+.host-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 12px 14px; margin: 14px 0 4px;
+  border: 1px solid var(--aqua); border-radius: 6px; background: rgba(30,234,219,0.06);
+}
+.host-bar__state { color: var(--white); font-size: 12px; }
+.host-bar__state b { color: var(--aqua); }
+.host-bar__ans { color: rgba(247,245,243,0.7); }
+.host-bar__btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.host-btn {
+  padding: 10px 16px; border: 1px solid rgba(247,245,243,0.4); border-radius: 4px;
+  color: var(--white); font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.host-btn.go { background: var(--red); border-color: var(--red); }
+.host-btn:disabled { opacity: 0.4; cursor: not-allowed; }

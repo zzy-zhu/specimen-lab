@@ -11,25 +11,37 @@ import { db, EVENT_ID } from "./firebase";
 import { SEED_PARTICIPANTS } from "../data/lab";
 
 const SPECIMENS = `rooms/${EVENT_ID}/specimens`;
+const SESSION = `rooms/${EVENT_ID}/session`;
 const ME_KEY = "specimen.lab.me.v2";
 const SESSION_KEY = "specimen.lab.session.ok";
 
 const PALETTE = ["#e5241c", "#12c9bc", "#0a0a0a"];
 
 let cache = []; // live db specimens
+let session = { state: "lobby", q: 0 }; // host-controlled session
 const listeners = new Set();
 const notify = () => listeners.forEach((cb) => cb());
 
-/* one shared realtime listener */
+/* one shared realtime listener for specimens */
 onValue(
   ref(db, SPECIMENS),
-  (snap) => {
-    const val = snap.val() || {};
-    cache = Object.values(val);
-    notify();
-  },
+  (snap) => { cache = Object.values(snap.val() || {}); notify(); },
   () => { /* permission/offline — keep seeds-only */ }
 );
+
+/* host-controlled session state */
+onValue(
+  ref(db, SESSION),
+  (snap) => { session = snap.val() || { state: "lobby", q: 0 }; notify(); },
+  () => {}
+);
+
+export function getSession() { return session; }
+export function setSession(patch) {
+  session = { ...session, ...patch };
+  notify();
+  update(ref(db, SESSION), patch).catch(() => {});
+}
 
 /* ---- identity helpers ---- */
 export function normHandle(h) {
@@ -62,13 +74,16 @@ export function getById(id) {
 }
 
 /* ---- writes ---- */
-export function createSpecimen({ handle, passcode, name, image }) {
-  const id = keyFor(handle);
-  const existing = cache.find((p) => p.id === id);
+/* simplified: just a name + selfie. id is generated (device-persistent). */
+export function createSpecimen({ name, image }) {
+  const prevId = localStorage.getItem(ME_KEY);
+  const existing = prevId && cache.find((p) => p.id === prevId);
+  const slug = (name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "specimen";
+  const rand = Math.abs(hashStr(name + navigator.userAgent + (prevId || ""))).toString(36).slice(0, 4);
+  const id = existing ? existing.id : `u_${slug}_${rand}`;
   const rec = {
     id,
-    handle: normHandle(handle),
-    passcode: passcode ?? existing?.passcode ?? "",
+    handle: existing?.handle || `${slug}-${rand}`,
     name,
     image: image ?? existing?.image ?? null,
     role: "specimen",
@@ -81,12 +96,17 @@ export function createSpecimen({ handle, passcode, name, image }) {
     part2Done: existing?.part2Done ?? false,
     createdAt: existing?.createdAt || Date.now(),
   };
-  // optimistic local update so the flow proceeds instantly
   cache = [...cache.filter((p) => p.id !== id), rec];
   localStorage.setItem(ME_KEY, id);
   notify();
   set(ref(db, `${SPECIMENS}/${id}`), rec).catch(() => {});
   return rec;
+}
+
+function hashStr(s) {
+  let h = 0;
+  for (let i = 0; i < (s || "").length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return h;
 }
 
 export function patchSpecimen(id, patch) {

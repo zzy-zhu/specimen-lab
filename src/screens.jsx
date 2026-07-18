@@ -44,10 +44,8 @@ export function Chrome({ part, progress = [], children, bgSeed = 7, onBack }) {
 /* ========================================================= */
 /* CREATE SPECIMEN — name + handle + passcode + image        */
 /* ========================================================= */
-export function CreateSpecimen({ onCreate, onBack, existing }) {
+export function CreateSpecimen({ onCreate, onBack, existing, cta = "Enter →" }) {
   const [name, setName] = useState(existing?.name || "");
-  const [handle, setHandle] = useState(existing?.handle || "");
-  const [passcode, setPasscode] = useState("");
   const [image, setImage] = useState(existing?.image || null);
   const camRef = useRef(null);
   const upRef = useRef(null);
@@ -59,53 +57,34 @@ export function CreateSpecimen({ onCreate, onBack, existing }) {
     r.readAsDataURL(file);
   };
 
-  const ready = name.trim() && handle.trim().length >= 2 && passcode.trim().length >= 4;
+  const ready = name.trim().length > 0;
 
   return (
-    <Chrome part="PART 01 · CREATIVE TENSION" progress={[true, false, false, false]} bgSeed={5} onBack={onBack}>
-      <span className="step-tag">STEP 01 — CREATE YOUR SPECIMEN</span>
-      <h1 className="display" style={{ marginTop: 12 }}>
-        Become a<br />specimen
+    <Chrome part="SPECIMEN.lab" progress={[]} bgSeed={5} onBack={onBack}>
+      <span className="step-tag">BECOME A SPECIMEN</span>
+      <h1 className="display" style={{ marginTop: 12, fontSize: "clamp(40px,13vw,60px)" }}>
+        You,<br />on file
       </h1>
-      <p className="lede" style={{ marginTop: 12 }}>
-        A face, a handle, a passcode. Your handle + passcode let you re-open your
-        specimen ID at any Specimen.lab event.
-      </p>
 
-      <div className="specimen-capture" style={{ marginTop: 20 }}>
-        <div className="specimen-avatar">
-          {image ? <img src={image} alt="your specimen" /> : <span className="mono">no image</span>}
+      <div className="center-col" style={{ marginTop: 26, gap: 18 }}>
+        <div className="specimen-avatar specimen-avatar--big" onClick={() => camRef.current?.click()}>
+          {image ? <img src={image} alt="your specimen" /> : <span className="mono">tap to<br />take selfie</span>}
           <div className="specimen-avatar__frame" />
         </div>
-        <div className="stack gap-8" style={{ flex: 1 }}>
-          <button className="btn btn-dark" onClick={() => camRef.current?.click()}>◉ Take selfie</button>
-          <button className="btn btn-ghost" onClick={() => upRef.current?.click()}>↑ Upload image</button>
-        </div>
+        <button className="linklike mono" onClick={() => upRef.current?.click()}>or upload a photo</button>
       </div>
 
       <input ref={camRef} className="hidden-input" type="file" accept="image/*" capture="user" onChange={(e) => readFile(e.target.files?.[0])} />
       <input ref={upRef} className="hidden-input" type="file" accept="image/*" onChange={(e) => readFile(e.target.files?.[0])} />
 
-      <div className="stack gap-14" style={{ marginTop: 18 }}>
-        <label className="stack gap-8">
-          <span className="eyebrow">DISPLAY NAME</span>
-          <input className="field" placeholder="what the room calls you" value={name} maxLength={24} onChange={(e) => setName(e.target.value)} />
-        </label>
-        <div className="two-col">
-          <label className="stack gap-8">
-            <span className="eyebrow">HANDLE</span>
-            <input className="field" placeholder="@yourhandle" value={handle} maxLength={20} onChange={(e) => setHandle(e.target.value)} />
-          </label>
-          <label className="stack gap-8">
-            <span className="eyebrow">PASSCODE</span>
-            <input className="field" type="text" placeholder="min 4 chars" value={passcode} maxLength={24} onChange={(e) => setPasscode(e.target.value)} />
-          </label>
-        </div>
-      </div>
+      <label className="stack gap-8" style={{ marginTop: 24 }}>
+        <span className="eyebrow">YOUR NAME</span>
+        <input className="field field--big" placeholder="what should we call you?" value={name} maxLength={24} onChange={(e) => setName(e.target.value)} />
+      </label>
 
       <div className="footer-actions">
-        <button className="btn btn-primary" disabled={!ready} onClick={() => onCreate({ name: name.trim(), handle, passcode: passcode.trim(), image })}>
-          Enter the tension →
+        <button className="btn btn-primary" disabled={!ready} onClick={() => onCreate({ name: name.trim(), image })}>
+          {cta}
         </button>
       </div>
     </Chrome>
