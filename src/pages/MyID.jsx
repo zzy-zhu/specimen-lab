@@ -6,7 +6,8 @@ import { Wordmark } from "../components/Wordmark";
 import { useScene } from "../lib/atmosphere";
 import { useMe, useRoom } from "../lib/hooks";
 import { findTwin, findShakeMatches } from "../data/lab";
-import { unlockSession } from "../lib/store";
+import { unlockSession, deleteSpecimen } from "../lib/store";
+import { resetIntro } from "../lib/prefs";
 
 export function MyID() {
   useScene({ tone: "space", accent: "aqua" });
@@ -16,6 +17,20 @@ export function MyID() {
   const [handle, setHandle] = useState("");
   const [passcode, setPasscode] = useState("");
   const [err, setErr] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const copyLink = async () => {
+    if (!me) return;
+    const url = `${window.location.origin}/p/${me.handle}`;
+    try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch { /* noop */ }
+  };
+  const clearData = () => {
+    if (!me) return;
+    if (!window.confirm("Clear your specimen data and replay the intro next time?")) return;
+    deleteSpecimen(me.id);
+    resetIntro();
+    nav("/");
+  };
 
   const pool = useMemo(() => room.filter((p) => p.id !== me?.id), [room, me]);
   const twin = useMemo(
@@ -83,6 +98,10 @@ export function MyID() {
         <span className={`id-pill mono ${me.part2Done ? "done" : ""}`}>{me.part2Done ? "✓" : "○"} Part 02 · Open Lab</span>
       </div>
 
+      <button className="id-link mono" onClick={copyLink}>
+        {copied ? "✓ link copied" : `◇ your permanent link — /p/${me.handle}`}
+      </button>
+
       <div className="stack gap-14" style={{ marginTop: 18 }}>
         {twin?.twin && <NameCard person={twin.twin} image={twin.twin.image} variant="twin" caption={`creative twin · agreed on ${twin.shared}/${twin.total}`} />}
         {freq?.similar && <NameCard person={freq.similar} image={freq.similar.image} variant="similar" caption="closest frequency" />}
@@ -94,7 +113,10 @@ export function MyID() {
         {!me.part1Done && <button className="btn btn-ghost" onClick={() => nav("/tension")}>Do Part 01 →</button>}
         {me.part1Done && !me.part2Done && <button className="btn btn-ghost" onClick={() => nav("/lab")}>Do Part 02 →</button>}
         {me.part1Done && me.part2Done && <button className="btn btn-ghost" onClick={() => nav("/lab")}>Revisit the Wood Wide Web →</button>}
-        <button className="linklike mono" onClick={() => { logout(); }}>sign out</button>
+        <div className="id-actions">
+          <button className="linklike mono" onClick={() => { logout(); }}>sign out</button>
+          <button className="linklike mono" style={{ color: "var(--red)" }} onClick={clearData}>clear my data & replay</button>
+        </div>
       </div>
     </motion.div>
   );

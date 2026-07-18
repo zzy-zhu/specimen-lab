@@ -102,18 +102,44 @@
 .cover__q1 {
   font-family: var(--sans);
   font-weight: 300;
-  font-size: clamp(22px, 6.4vw, 32px);
-  line-height: 1.5;
+  font-size: clamp(15px, 4.4vw, 20px);
+  line-height: 1.7;
   color: var(--white);
-  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.7);
 }
 .cover__q2 {
   font-family: var(--sans);
   font-weight: 300;
-  font-size: clamp(30px, 9vw, 46px);
+  font-size: clamp(20px, 6vw, 28px);
   color: var(--white);
   letter-spacing: -0.01em;
-  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.7);
+}
+
+/* black silence + countdown */
+.cover__count {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: #050607;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cover__num {
+  font-family: var(--sans);
+  font-weight: 200;
+  font-size: 30vw;
+  line-height: 1;
+  color: var(--white);
+}
+.cover__go {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--aqua);
+  animation: hintpulse 1s ease-in-out infinite;
 }
 .cover__overlay {
   position: absolute;
@@ -627,3 +653,60 @@
 .poster__fallback .mono { display: block; font-size: 10px; opacity: 0.7; margin: 6px 0 8px; }
 .poster__fallback p { font-size: 13px; line-height: 1.45; opacity: 0.85; }
 .poster__hint { display: block !important; margin-top: 12px; opacity: 0.35 !important; font-size: 9px !important; }
+
+/* ---- cookie banner ---- */
+.cookie {
+  position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%);
+  z-index: 60; width: calc(100% - 28px); max-width: 452px;
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 4px;
+  background: rgba(8,10,12,0.92); border: 1px solid rgba(247,245,243,0.2);
+  backdrop-filter: blur(8px);
+}
+.cookie__text { font-size: 11px; line-height: 1.4; color: rgba(247,245,243,0.85); flex: 1; }
+.cookie__btn {
+  flex-shrink: 0; padding: 9px 16px; border-radius: 100px;
+  background: var(--red); color: var(--white);
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+/* ---- id chip (top-right) + profile link ---- */
+.id-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 5px 12px 5px 5px; border-radius: 100px;
+  border: 1px solid rgba(247,245,243,0.3); color: var(--white);
+  font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; max-width: 150px;
+}
+.id-chip img, .id-chip span {
+  width: 24px; height: 24px; border-radius: 50%; object-fit: cover;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(247,245,243,0.1); color: var(--aqua); flex-shrink: 0;
+}
+.id-link {
+  margin-top: 14px; align-self: flex-start;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.04em;
+  color: var(--aqua); border: 1px dashed rgba(30,234,219,0.5);
+  padding: 8px 12px; border-radius: 4px; text-transform: uppercase;
+}
+.id-actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 4px; }
+
+/* ---- flip card (tech-magic reveal) ---- */
+.flip { perspective: 1400px; cursor: pointer; }
+.flip__inner { position: relative; transform-style: preserve-3d; min-height: 210px; }
+.flip__face { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.flip__front { position: relative; }
+.flip__back {
+  position: absolute; inset: 0; transform: rotateY(180deg);
+  border: 1px solid var(--aqua); border-radius: 2px;
+  background: #070b0d; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+}
+.flip__scan {
+  position: absolute; left: 0; right: 0; height: 30%;
+  background: linear-gradient(180deg, transparent, rgba(30,234,219,0.22), transparent);
+  animation: scanmove 1.6s ease-in-out infinite;
+}
+@keyframes scanmove { 0% { top: -30%; } 100% { top: 100%; } }
+.flip__label { color: var(--aqua); letter-spacing: 0.16em; }
+.flip__q { font-family: var(--sans); font-weight: 200; font-size: 64px; color: rgba(247,245,243,0.85); line-height: 1; }
+.flip__hint { color: rgba(247,245,243,0.5); }

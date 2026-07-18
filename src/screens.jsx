@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Wordmark } from "./components/Wordmark";
 import { GridBackground } from "./components/GridBackground";
 import { NameCard } from "./components/NameCard";
+import { FlipCard } from "./components/FlipCard";
 import { TiltMeter } from "./components/TiltMeter";
 import { useTilt } from "./hooks/useTilt";
 import { useShake } from "./hooks/useShake";
@@ -196,20 +197,25 @@ function ResultBar({ left, right, leftPct, rightPct, myChoice }) {
 /* ========================================================= */
 /* TWIN                                                      */
 /* ========================================================= */
-export function Twin({ twin, shared, total, onHome, onBack }) {
+export function Twin({ twin, shared, total, reason, onHome, onBack }) {
   return (
     <Chrome part="PART 01 · CREATIVE TENSION" progress={[true, true, true, true]} bgSeed={21} onBack={onBack}>
-      <span className="step-tag">STEP 04 — MEET YOUR CREATIVE TWIN</span>
+      <span className="step-tag">STEP 04 — REVEAL YOUR CREATIVE TWIN</span>
       <h1 className="display" style={{ marginTop: 10 }}>Same<br />instincts</h1>
       <p className="lede" style={{ marginTop: 10 }}>
-        AI matched your answers against the room. You and <strong>{twin?.name}</strong> agreed on {shared}/{total} tensions.
+        AI scanned the room and matched your instincts — {shared}/{total} tensions aligned.
       </p>
-      <motion.div style={{ marginTop: 22 }} initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.15 }}>
-        <NameCard person={twin} image={twin?.image} variant="twin" caption={`“${twin?.idea || "still forming an idea"}” — go say hello.`} />
-      </motion.div>
+      <div style={{ marginTop: 22 }}>
+        <FlipCard
+          person={twin}
+          image={twin?.image}
+          variant="twin"
+          reason={reason || `“${twin?.idea || "still forming an idea"}” — go say hello.`}
+        />
+      </div>
       <div className="footer-actions">
-        <button className="btn btn-primary" onClick={onHome}>Done — back to the hub →</button>
-        <span className="mono" style={{ opacity: 0.5, textAlign: "center" }}>Part 02 opens after the talks</span>
+        <button className="btn btn-primary" onClick={onHome}>Done — back to the menu →</button>
+        <span className="mono" style={{ opacity: 0.5, textAlign: "center" }}>tap the card to flip it</span>
       </div>
     </Chrome>
   );

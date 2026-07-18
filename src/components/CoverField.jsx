@@ -157,6 +157,11 @@ export function CoverField({ levelRef, enterRef }) {
       } else {
         drawNet(0, 0, "rgba(247,245,243,0.92)", 1, energy, ep, zoom);
       }
+      // swallow to black at the very end (matches the noise shader)
+      if (ep > 0.9) {
+        ctx.fillStyle = `rgba(5,6,7,${Math.min(1, (ep - 0.9) / 0.08)})`;
+        ctx.fillRect(0, 0, W, H);
+      }
       raf = requestAnimationFrame(loop);
     };
     loop();

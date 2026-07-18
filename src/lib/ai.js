@@ -9,10 +9,57 @@
    Otherwise it falls back to a deterministic local synthesis so
    the experience always works offline.
    ============================================================ */
-import { THEME_SEEDS, themeFor } from "../data/lab";
+import { THEME_SEEDS, themeFor, QUESTIONS, findTwin } from "../data/lab";
 
 const API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY;
 const MODEL = "claude-sonnet-5";
+
+async function callClaude(prompt, maxTokens = 400) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": API_KEY,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, messages: [{ role: "user", content: prompt }] }),
+  });
+  if (!res.ok) throw new Error(`claude ${res.status}`);
+  const data = await res.json();
+  return data.content?.map((c) => c.text).join("") || "";
+}
+
+/* ---- matchmaking: pick a creative twin + a "tech-magic" reason ---- */
+export async function matchmake(me, candidates) {
+  const pool = candidates.filter((p) => p.id !== me?.id && p.answers?.length);
+  if (!pool.length) return { match: null, reason: "", shared: 0, total: QUESTIONS.length };
+
+  const local = findTwin(me.answers || [], pool);
+  const base = { match: local.twin, reason: "", shared: local.shared, total: local.total };
+
+  if (!API_KEY || !(me.answers?.length)) {
+    base.reason = `You and ${local.twin?.name} share ${local.shared}/${local.total} instincts — the same current runs through you both.`;
+    return base;
+  }
+  try {
+    const describe = (a) => QUESTIONS.map((q, i) => `${q.prompt.replace("…", "")}: ${a?.[i] === 1 ? q.right : q.left}`).join("; ");
+    const list = pool.slice(0, 20).map((p) => `- ${p.id} | ${p.name}: ${describe(p.answers)}`).join("\n");
+    const prompt = `Specimen.lab pairs people by creative instinct. Given MY answers and a list of others, pick my single best "creative twin" and write ONE short, vivid, slightly mystical/tech-magic sentence about why we resonate (name them). Return STRICT JSON: {"id":"<their id>","reason":"..."}.
+
+MY answers: ${describe(me.answers)}
+OTHERS:
+${list}`;
+    const text = await callClaude(prompt, 300);
+    const json = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
+    const match = pool.find((p) => p.id === json.id) || local.twin;
+    return { match, reason: json.reason || base.reason, shared: local.shared, total: local.total, source: "claude" };
+  } catch (e) {
+    console.warn("matchmake fallback:", e.message);
+    base.reason = `You and ${local.twin?.name} share ${local.shared}/${local.total} instincts — the same current runs through you both.`;
+    return base;
+  }
+}
 
 /* group participants by keyword theme */
 export function clusterIdeas(people) {

@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Wordmark, CornerBrand } from "../components/Wordmark";
+import { Wordmark } from "../components/Wordmark";
 import { useScene } from "../lib/atmosphere";
 import { useMe } from "../lib/hooks";
 import { usePresence } from "../hooks/usePresence";
 import { isSessionUnlocked } from "../lib/store";
 
-const LUMA_URL = "https://lu.ma/specimenlab";
+const LUMA_URL = "https://luma.com/a5s7keps";
 
 const stagger = { animate: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } } };
 const rise = {
@@ -32,7 +32,10 @@ export function Menu() {
     <motion.div className="screen screen--space" variants={stagger} initial="initial" animate="animate">
       <div className="topbar">
         <button className="wordmark-btn" onClick={() => nav("/")}><Wordmark size={17} stacked color="var(--white)" /></button>
-        <CornerBrand color="var(--white)" />
+        <button className="id-chip mono" onClick={() => nav("/me")}>
+          {me?.image ? <img src={me.image} alt="" /> : <span>◇</span>}
+          {me ? me.name : "your ID"}
+        </button>
       </div>
 
       <motion.div variants={rise} style={{ marginTop: 6 }}>

@@ -1,7 +1,7 @@
 /* Today's Specimen.lab artists. Drop headshots at
    public/artists/<id>.jpg to fill the image slots. */
 export const INSTAGRAM = "https://instagram.com/specimen.lab";
-export const LUMA = "https://lu.ma/specimenlab";
+export const LUMA = "https://luma.com/a5s7keps";
 
 export const ARTISTS = [
   { id: "conway-bongo", name: "Conway Bongo", role: "Creative Director, Visual Artist", accent: "#e5241c",

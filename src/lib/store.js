@@ -138,6 +138,17 @@ export function isSessionUnlocked() {
   return sessionStorage.getItem(SESSION_KEY) === "1";
 }
 
+/* a specimen clears their own data (RTDB record + local identity) */
+export function deleteSpecimen(id) {
+  if (id) {
+    cache = cache.filter((p) => p.id !== id);
+    remove(ref(db, `${SPECIMENS}/${id}`)).catch(() => {});
+  }
+  localStorage.removeItem(ME_KEY);
+  sessionStorage.removeItem(SESSION_KEY);
+  notify();
+}
+
 /* organizer: clear real submissions */
 export function resetRoom() {
   remove(ref(db, SPECIMENS)).catch(() => {});
