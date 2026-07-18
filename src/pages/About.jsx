@@ -1,57 +1,54 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Wordmark, FuturePixelMark, CornerBrand } from "../components/Wordmark";
-import { GridBackground } from "../components/GridBackground";
-import { useEffect } from "react";
-import { useAtmosphere } from "../lib/atmosphere";
+import { Wordmark, FuturePixelMark } from "../components/Wordmark";
+import { useScene } from "../lib/atmosphere";
+import { INSTAGRAM } from "../data/artists";
+
+function IgIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <rect x="2.5" y="2.5" width="19" height="19" rx="5" />
+      <circle cx="12" cy="12" r="4.2" />
+      <circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
 
 export function About() {
   const nav = useNavigate();
-  const { setScene } = useAtmosphere();
-  useEffect(() => { setScene({ visible: false }); }, [setScene]);
+  useScene({ tone: "space", accent: "red" });
 
   return (
-    <motion.div className="screen screen--cover" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-      <GridBackground seed={9} nodes={12} color="var(--red)" />
-
-      <div className="topbar">
-        <button className="wordmark-btn" onClick={() => nav("/")}><Wordmark size={17} stacked color="var(--red)" /></button>
-        <CornerBrand color="var(--red)" />
+    <motion.div className="screen screen--space about" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+      {/* faded repeated wordmark watermark column */}
+      <div className="about-wm" aria-hidden="true">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Wordmark key={i} size={30} stacked color="rgba(247,245,243,0.06)" />
+        ))}
       </div>
 
-      <span className="step-tag">ABOUT THE SESSION</span>
-      <h1 className="display" style={{ marginTop: 10 }}>What is<br />Specimen.lab?</h1>
+      <div className="topbar">
+        <button className="wordmark-btn" onClick={() => nav("/")}><Wordmark size={17} stacked color="var(--white)" /></button>
+        <FuturePixelMark color="var(--white)" size={11} />
+      </div>
 
-      <div className="about-body">
-        <p>
-          Specimen.lab is a living archive of contamination and creative mischief — a
-          gathering where artists, technologists, and makers cross-pollinate in real time.
+      <div className="about2">
+        <span className="step-tag">ABOUT</span>
+        <h1 className="display" style={{ color: "var(--white)", marginTop: 8 }}>A room of<br />specimens</h1>
+        <p className="lede" style={{ color: "rgba(247,245,243,0.86)", marginTop: 14 }}>
+          Specimen.lab is a living archive of contamination and creative mischief. No name
+          tags, no titles — just you, your instincts, and the ideas you're still chasing.
         </p>
-        <p>
-          Instead of name tags and job titles, everyone becomes a <b>specimen</b>: a face,
-          a handle, and a set of instincts. Two lightweight interactions run on your phone.
+        <p className="lede" style={{ color: "rgba(247,245,243,0.7)", marginTop: 12 }}>
+          Two quick phone rituals turn a room of strangers into a network.
         </p>
 
-        <div className="about-parts">
-          <div className="about-part">
-            <span className="mono">01 · CREATIVE TENSION</span>
-            <p><b>Who you are.</b> Four playful questions answered by tilting your phone. AI pairs you with your creative twin.</p>
-          </div>
-          <div className="about-part">
-            <span className="mono">02 · OPEN LAB</span>
-            <p><b>What you explore.</b> Share an unfinished idea, shake to connect by rhythm, and watch the Wood Wide Web of the whole room grow.</p>
-          </div>
-        </div>
-
-        <p className="about-note">
-          Part 01 breaks the ice around personality. Part 02 sparks conversation around
-          unfinished ideas — exactly what Specimen.lab exists to cultivate. Your specimen ID
-          is saved: return to any FuturePIXEL session and pick up where you left off.
-        </p>
+        <a className="ig-follow" href={INSTAGRAM} target="_blank" rel="noreferrer">
+          <IgIcon /> follow @specimen.lab
+        </a>
       </div>
 
       <div className="footer-actions">
-        <div style={{ marginBottom: 6 }}><FuturePixelMark color="var(--red)" /></div>
         <button className="btn btn-primary" onClick={() => nav("/enter")}>Enter the session →</button>
         <button className="linklike mono" onClick={() => nav("/")}>← back to cover</button>
       </div>

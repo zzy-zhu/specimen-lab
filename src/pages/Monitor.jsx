@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { WoodWideWeb } from "../components/WoodWideWeb";
+import { LiveSwarm } from "../components/LiveSwarm";
 import { Wordmark, FuturePixelMark } from "../components/Wordmark";
 import { useScene, ListenButton } from "../lib/atmosphere";
 import { useRoom } from "../lib/hooks";
@@ -89,11 +90,17 @@ function Dashboard() {
       </header>
 
       <div className="monitor__grid">
-        {/* left: wood wide web */}
-        <section className="monitor__web">
-          <span className="panel-tag mono">THE WOOD WIDE WEB — every specimen, every root</span>
-          <WoodWideWeb people={room} dark />
-        </section>
+        {/* left: live swarm hero + wood web */}
+        <div className="monitor__left">
+          <section className="monitor__swarm">
+            <span className="panel-tag mono">LIVE ROOM — headshots move with each phone</span>
+            <LiveSwarm people={room} />
+          </section>
+          <section className="monitor__web">
+            <span className="panel-tag mono">THE WOOD WIDE WEB — every specimen, every root</span>
+            <WoodWideWeb people={room} dark />
+          </section>
+        </div>
 
         {/* right column */}
         <div className="monitor__side">

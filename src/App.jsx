@@ -4,6 +4,7 @@ import { Cover } from "./pages/Cover";
 import { About } from "./pages/About";
 import { Enter } from "./pages/Enter";
 import { Menu } from "./pages/Menu";
+import { Artists } from "./pages/Artists";
 import { TensionFlow } from "./pages/TensionFlow";
 import { LabFlow } from "./pages/LabFlow";
 import { MyID } from "./pages/MyID";
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="/about" element={<About />} />
         <Route path="/enter" element={<Enter />} />
         <Route path="/menu" element={<Menu />} />
+        <Route path="/artists" element={<Artists />} />
         <Route path="/tension" element={<TensionFlow />} />
         <Route path="/lab" element={<LabFlow />} />
         <Route path="/me" element={<MyID />} />

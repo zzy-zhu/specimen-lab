@@ -4,7 +4,10 @@ import { motion } from "framer-motion";
 import { Wordmark, CornerBrand } from "../components/Wordmark";
 import { useScene } from "../lib/atmosphere";
 import { useMe } from "../lib/hooks";
+import { usePresence } from "../hooks/usePresence";
 import { isSessionUnlocked } from "../lib/store";
+
+const LUMA_URL = "https://lu.ma/specimenlab";
 
 const stagger = { animate: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } } };
 const rise = {
@@ -18,6 +21,7 @@ export function Menu() {
   useScene({ tone: "space", accent: "aqua" });
   const nav = useNavigate();
   const { me } = useMe();
+  usePresence(me?.id, !!me); // headshot drifts on the monitor as you move
 
   // guard: must have entered the day code, or be logged into an ID
   useEffect(() => {
@@ -60,6 +64,11 @@ export function Menu() {
           <span className="exp-card__go">→</span>
         </motion.button>
       </div>
+
+      <motion.div variants={rise} className="menu-extra">
+        <button className="btn btn-ghost" onClick={() => nav("/artists")}>Today's artists →</button>
+        <a className="btn btn-ghost" href={LUMA_URL} target="_blank" rel="noreferrer">RSVP on Luma ↗</a>
+      </motion.div>
 
       <motion.div variants={rise} className="home-foot">
         <button className="linklike mono" onClick={() => nav("/me")}>

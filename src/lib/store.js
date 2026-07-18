@@ -1,135 +1,136 @@
 /* ============================================================
-   SPECIMEN.lab — local "room" store
+   SPECIMEN.lab — realtime store (Firebase RTDB)
    ------------------------------------------------------------
-   Persists specimens to localStorage so:
-     · a participant can log back in with handle + passcode
-     · the /monitor dashboard reacts live (cross-tab storage events)
-   Seed participants stand in for a pre-populated room.
-   Swap this module for a realtime backend to go cross-device.
+   Specimens sync live across every phone + the monitor. A local
+   in-memory cache (fed by one onValue listener) keeps a synchronous
+   read API so the React hooks stay simple. Seeds are read-only and
+   merged in so the room is never empty.
    ============================================================ */
+import { ref, onValue, set, update, remove, get, child } from "firebase/database";
+import { db, EVENT_ID } from "./firebase";
 import { SEED_PARTICIPANTS } from "../data/lab";
 
-const ROOM_KEY = "specimen.lab.room.v1";
-const ME_KEY = "specimen.lab.me.v1";
-const EVT = "specimen-room-change";
+const SPECIMENS = `rooms/${EVENT_ID}/specimens`;
+const ME_KEY = "specimen.lab.me.v2";
+const SESSION_KEY = "specimen.lab.session.ok";
 
 const PALETTE = ["#e5241c", "#12c9bc", "#0a0a0a"];
 
-/* ---- low level ---- */
-function readRoom() {
-  try {
-    const raw = localStorage.getItem(ROOM_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-function writeRoom(list) {
-  localStorage.setItem(ROOM_KEY, JSON.stringify(list));
-  // notify same-tab listeners (storage event only fires cross-tab)
-  window.dispatchEvent(new CustomEvent(EVT));
-}
+let cache = []; // live db specimens
+const listeners = new Set();
+const notify = () => listeners.forEach((cb) => cb());
 
-/* ---- identity ---- */
+/* one shared realtime listener */
+onValue(
+  ref(db, SPECIMENS),
+  (snap) => {
+    const val = snap.val() || {};
+    cache = Object.values(val);
+    notify();
+  },
+  () => { /* permission/offline — keep seeds-only */ }
+);
+
+/* ---- identity helpers ---- */
 export function normHandle(h) {
   return (h || "").trim().toLowerCase().replace(/^@/, "").replace(/\s+/g, "");
+}
+function keyFor(handle) {
+  return "u_" + normHandle(handle).replace(/[.#$/[\]]/g, "_");
 }
 
 export function getMe() {
   const id = localStorage.getItem(ME_KEY);
   if (!id) return null;
-  return readRoom().find((p) => p.id === id) || null;
+  return getAll().find((p) => p.id === id) || null;
 }
 export function setMe(id) {
   if (id) localStorage.setItem(ME_KEY, id);
   else localStorage.removeItem(ME_KEY);
-  window.dispatchEvent(new CustomEvent(EVT));
+  notify();
 }
 
 /* ---- public data ---- */
 export function getStored() {
-  return readRoom();
+  return cache;
 }
-
-/** everyone visible in the room: seeds + real submissions */
 export function getAll() {
-  return [...SEED_PARTICIPANTS, ...readRoom()];
+  return [...SEED_PARTICIPANTS, ...cache];
 }
-
 export function getById(id) {
   return getAll().find((p) => p.id === id) || null;
 }
 
-/** create or update the current specimen; returns the record */
+/* ---- writes ---- */
 export function createSpecimen({ handle, passcode, name, image }) {
-  const list = readRoom();
-  const h = normHandle(handle);
-  let rec = list.find((p) => p.handle === h);
-  if (rec) {
-    rec.name = name;
-    rec.image = image;
-    if (passcode) rec.passcode = passcode;
-  } else {
-    rec = {
-      id: `u-${h}-${list.length}`,
-      handle: h,
-      passcode: passcode || "",
-      name,
-      image,
-      role: "specimen",
-      color: PALETTE[(SEED_PARTICIPANTS.length + list.length) % PALETTE.length],
-      answers: [],
-      shake: null,
-      idea: "",
-      tech: "",
-      part1Done: false,
-      part2Done: false,
-      createdAt: new Date().toISOString(),
-    };
-    list.push(rec);
-  }
-  // set the "me" pointer BEFORE writing the room, so the change event
-  // that writeRoom fires already resolves to this record via getMe().
-  localStorage.setItem(ME_KEY, rec.id);
-  writeRoom(list);
+  const id = keyFor(handle);
+  const existing = cache.find((p) => p.id === id);
+  const rec = {
+    id,
+    handle: normHandle(handle),
+    passcode: passcode ?? existing?.passcode ?? "",
+    name,
+    image: image ?? existing?.image ?? null,
+    role: "specimen",
+    color: existing?.color || PALETTE[cache.length % PALETTE.length],
+    answers: existing?.answers ?? [],
+    shake: existing?.shake ?? null,
+    idea: existing?.idea ?? "",
+    tech: existing?.tech ?? "",
+    part1Done: existing?.part1Done ?? false,
+    part2Done: existing?.part2Done ?? false,
+    createdAt: existing?.createdAt || Date.now(),
+  };
+  // optimistic local update so the flow proceeds instantly
+  cache = [...cache.filter((p) => p.id !== id), rec];
+  localStorage.setItem(ME_KEY, id);
+  notify();
+  set(ref(db, `${SPECIMENS}/${id}`), rec).catch(() => {});
   return rec;
 }
 
-/** patch fields on a specimen by id */
 export function patchSpecimen(id, patch) {
-  const list = readRoom();
-  const rec = list.find((p) => p.id === id);
-  if (!rec) return null;
-  Object.assign(rec, patch);
-  writeRoom(list);
+  const rec = cache.find((p) => p.id === id);
+  if (rec) {
+    Object.assign(rec, patch);
+    cache = [...cache];
+    notify();
+  }
+  update(ref(db, `${SPECIMENS}/${id}`), patch).catch(() => {});
   return rec;
 }
 
-/** log back in with handle + passcode */
-export function login(handle, passcode) {
-  const h = normHandle(handle);
-  const rec = readRoom().find((p) => p.handle === h);
+/* throttled live position (accelerometer) — separate node, tiny payload */
+let lastPos = 0;
+export function publishPosition(id, x, y, motion = 0) {
+  const now = Date.now();
+  if (now - lastPos < 90) return; // ~11 fps
+  lastPos = now;
+  update(ref(db, `${SPECIMENS}/${id}/live`), { x, y, m: motion, t: now }).catch(() => {});
+}
+
+export async function login(handle, passcode) {
+  const id = keyFor(handle);
+  let rec = cache.find((p) => p.id === id);
+  if (!rec) {
+    try {
+      const snap = await get(child(ref(db, SPECIMENS), id));
+      rec = snap.val();
+    } catch { /* offline */ }
+  }
   if (!rec) return { ok: false, reason: "not-found" };
   if ((rec.passcode || "") !== (passcode || "")) return { ok: false, reason: "bad-passcode" };
-  setMe(rec.id);
+  localStorage.setItem(ME_KEY, id);
+  notify();
   return { ok: true, record: rec };
 }
 
-/** subscribe to any room change (same-tab + cross-tab) */
 export function subscribe(cb) {
-  const onStorage = (e) => {
-    if (!e || e.key === ROOM_KEY) cb();
-  };
-  window.addEventListener("storage", onStorage);
-  window.addEventListener(EVT, cb);
-  return () => {
-    window.removeEventListener("storage", onStorage);
-    window.removeEventListener(EVT, cb);
-  };
+  listeners.add(cb);
+  return () => listeners.delete(cb);
 }
 
 /* ---- session access (day code OR logged-in ID) ---- */
-const SESSION_KEY = "specimen.lab.session.ok";
 export function unlockSession() {
   sessionStorage.setItem(SESSION_KEY, "1");
 }
@@ -137,9 +138,10 @@ export function isSessionUnlocked() {
   return sessionStorage.getItem(SESSION_KEY) === "1";
 }
 
-/* handy for the monitor demo */
+/* organizer: clear real submissions */
 export function resetRoom() {
-  localStorage.removeItem(ROOM_KEY);
+  remove(ref(db, SPECIMENS)).catch(() => {});
   localStorage.removeItem(ME_KEY);
-  window.dispatchEvent(new CustomEvent(EVT));
+  cache = [];
+  notify();
 }

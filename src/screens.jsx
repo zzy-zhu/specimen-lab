@@ -7,6 +7,7 @@ import { TiltMeter } from "./components/TiltMeter";
 import { useTilt } from "./hooks/useTilt";
 import { useShake } from "./hooks/useShake";
 import { QUESTIONS } from "./data/lab";
+import { downscaleImage } from "./lib/image";
 
 /* shared page-transition wrapper */
 export const fade = {
@@ -53,7 +54,7 @@ export function CreateSpecimen({ onCreate, onBack, existing }) {
   const readFile = (file) => {
     if (!file) return;
     const r = new FileReader();
-    r.onload = () => setImage(r.result);
+    r.onload = async () => setImage(await downscaleImage(r.result));
     r.readAsDataURL(file);
   };
 

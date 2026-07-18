@@ -27,8 +27,8 @@ export function MyID() {
     [me, pool]
   );
 
-  const submit = () => {
-    const r = login(handle, passcode);
+  const submit = async () => {
+    const r = await login(handle, passcode);
     if (!r.ok) setErr(r.reason === "not-found" ? "no specimen with that handle" : "wrong passcode");
     else { setErr(""); unlockSession(); }
   };

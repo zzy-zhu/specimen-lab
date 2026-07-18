@@ -24,8 +24,9 @@
   --paper-dim: #d9d3ce;
   --white: #f7f5f3;
 
-  --sans: "Space Grotesk Variable", "Space Grotesk", system-ui, sans-serif;
-  --mono: "Space Mono", ui-monospace, Menlo, monospace;
+  /* Hanken Grotesk — logo, titles, all text. Bitcount Grid Single — decorative labels. */
+  --sans: "Hanken Grotesk Variable", "Hanken Grotesk", system-ui, sans-serif;
+  --mono: "Bitcount Grid Single Variable", "Hanken Grotesk Variable", monospace;
 
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   color-scheme: dark;
@@ -88,17 +89,24 @@ img {
     radial-gradient(120% 90% at 50% 20%, #14171a 0%, #0a0c0e 45%, #050607 100%),
     #050607;
 }
-.mineral-space {
+.mineral-space,
+.noise-field {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
 }
+.noise-field--fallback,
 .mineral-space--fallback {
   background:
-    radial-gradient(60% 50% at 50% 40%, rgba(30, 234, 219, 0.06), transparent 70%),
-    radial-gradient(50% 40% at 70% 70%, rgba(229, 36, 28, 0.05), transparent 70%);
+    radial-gradient(70% 55% at 40% 35%, rgba(229, 36, 28, 0.22), transparent 70%),
+    radial-gradient(60% 50% at 72% 70%, rgba(18, 224, 230, 0.2), transparent 72%),
+    #070809;
 }
+.tw-cursor {
+  animation: tw-blink 0.8s steps(1) infinite;
+}
+@keyframes tw-blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
 
 /* screen scaffold */
 .screen {
@@ -122,20 +130,22 @@ img {
 .corner-brand {
   font-family: var(--mono);
 }
+/* Bitcount Grid Single is a pixel-grid decorative face — a touch larger,
+   no negative tracking, uppercase reads as technical labels/coordinates */
 .mono {
-  font-size: 10px;
-  letter-spacing: 0.04em;
+  font-size: 11px;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
 }
 .eyebrow {
-  font-size: 10px;
-  letter-spacing: 0.2em;
+  font-size: 11px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  opacity: 0.7;
+  opacity: 0.75;
 }
 .step-tag {
-  font-size: 10px;
-  letter-spacing: 0.16em;
+  font-size: 11px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--red);
   display: flex;
@@ -152,9 +162,9 @@ img {
 h1.display {
   font-family: var(--sans);
   font-size: clamp(34px, 11vw, 52px);
-  line-height: 0.92;
-  letter-spacing: -0.03em;
-  font-weight: 600;
+  line-height: 0.96;
+  letter-spacing: -0.02em;
+  font-weight: 300; /* Hanken light */
   text-transform: uppercase;
 }
 .lede {
@@ -242,22 +252,30 @@ h1.display {
   display: none;
 }
 
-/* wordmark */
+/* wordmark — Hanken light */
 .wordmark {
   font-family: var(--sans);
-  font-weight: 500;
+  font-weight: 300;
   line-height: 0.98;
   letter-spacing: -0.02em;
   display: inline-block;
 }
 .wordmark .paren {
-  font-weight: 300;
+  font-weight: 200;
 }
 
-.corner-brand {
-  font-size: 10px;
-  line-height: 1.15;
-  letter-spacing: 0.04em;
+/* FuturePIXEL stacked logo */
+.fpx-logo {
+  font-family: var(--sans);
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+  display: inline-block;
+  text-transform: none;
+}
+.fpx-pixel {
+  font-family: var(--mono);
+  font-size: 0.85em;
 }
 
 /* progress dots */

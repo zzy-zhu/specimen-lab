@@ -23,29 +23,19 @@ export function Wordmark({ size = 28, color = "var(--ink)", stacked = true }) {
   );
 }
 
-/* corner marks that appear on every poster */
-export function CornerBrand({ color = "var(--ink)" }) {
+/* the FuturePIXEL logo — stacked #FUT (URE *PIX ▪EL block */
+export function FuturePixelMark({ color = "var(--ink)", size = 15 }) {
   return (
-    <span className="corner-brand" style={{ color }}>
-      #FUT
-      <br />
-      (URE
-      <br />
-      *PIX
-      <br />
-      EL
+    <span className="fpx-logo" style={{ color, fontSize: size }} aria-label="FuturePIXEL">
+      #FUT<br />
+      (URE<br />
+      *PIX<br />
+      <span className="fpx-pixel">▝</span>EL
     </span>
   );
 }
 
-/* the session host mark */
-export function FuturePixelMark({ color = "var(--ink)" }) {
-  return (
-    <span style={{ color, lineHeight: 1 }}>
-      <span className="mono" style={{ display: "block", fontSize: 8, opacity: 0.7, letterSpacing: "0.14em" }}>
-        A SESSION BY
-      </span>
-      <strong style={{ fontSize: 17, letterSpacing: "-0.01em" }}>*FuturePIXEL</strong>
-    </span>
-  );
+/* small alias used in corners */
+export function CornerBrand({ color = "var(--ink)" }) {
+  return <FuturePixelMark color={color} size={11} />;
 }

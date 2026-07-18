@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { CreateSpecimen, Tension, Twin } from "../screens";
 import { useMe, useRoom } from "../lib/hooks";
+import { usePresence } from "../hooks/usePresence";
 import { findTwin } from "../data/lab";
 
 export function TensionFlow() {
@@ -10,6 +11,7 @@ export function TensionFlow() {
   const { me, create, patch } = useMe();
   const room = useRoom();
   const [step, setStep] = useState(me ? "q" : "create");
+  usePresence(me?.id, step === "q" && !!me);
   const [answers, setAnswers] = useState(me?.answers?.length ? me.answers : null);
 
   const pool = useMemo(() => room.filter((p) => p.id !== me?.id && p.answers?.length), [room, me]);

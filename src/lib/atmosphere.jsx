@@ -1,9 +1,9 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { MineralSpace } from "../components/MineralSpace";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { NoiseField } from "../components/NoiseField";
 import { useMic } from "../hooks/useMic";
 
 /* ============================================================
-   Atmosphere — one shared microphone + the mineral-space backdrop.
+   Atmosphere — one shared microphone + the blue/red noise backdrop.
    Pages call setScene({ visible, tone, accent }) to summon it.
    A single mic stream feeds every reactive element.
    ============================================================ */
@@ -12,6 +12,7 @@ const Ctx = createContext(null);
 export function AtmosphereProvider({ children }) {
   const mic = useMic();
   const [scene, setSceneState] = useState({ visible: false, tone: "space", accent: "aqua" });
+  const zeroRef = useRef(0); // atmosphere backdrop never runs the enter transition
 
   // stable setter so effects that depend on it don't loop
   const setScene = useCallback((patch) => setSceneState((s) => ({ ...s, ...patch })), []);
@@ -21,16 +22,14 @@ export function AtmosphereProvider({ children }) {
     [mic, scene, setScene]
   );
 
+  // backdrop is subtler than the cover
+  const intensity = scene.tone === "cover" ? 1 : 0.62;
+
   return (
     <Ctx.Provider value={value}>
       {scene.visible && (
         <div className="atmosphere">
-          <MineralSpace
-            levelRef={mic.levelRef}
-            bandsRef={mic.bandsRef}
-            accent={scene.accent}
-            tone={scene.tone}
-          />
+          <NoiseField levelRef={mic.levelRef} bandsRef={mic.bandsRef} enterRef={zeroRef} intensity={intensity} accent={scene.accent} />
         </div>
       )}
       {children}
