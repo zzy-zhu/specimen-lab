@@ -656,7 +656,8 @@
 
 /* ---- cookie banner ---- */
 .cookie {
-  position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%);
+  /* centered via left/right + margin so framer-motion's transform (y) is free */
+  position: fixed; left: 0; right: 0; bottom: 14px; margin: 0 auto;
   z-index: 60; width: calc(100% - 28px); max-width: 452px;
   display: flex; align-items: center; gap: 12px;
   padding: 12px 14px; border-radius: 4px;
