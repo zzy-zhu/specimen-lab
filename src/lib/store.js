@@ -8,7 +8,6 @@
    ============================================================ */
 import { ref, onValue, set, update, remove, get, child } from "firebase/database";
 import { db, EVENT_ID } from "./firebase";
-import { SEED_PARTICIPANTS } from "../data/lab";
 
 const SPECIMENS = `rooms/${EVENT_ID}/specimens`;
 const SESSION = `rooms/${EVENT_ID}/session`;
@@ -77,8 +76,9 @@ export function setMe(id) {
 export function getStored() {
   return cache;
 }
+/* only real registered specimens — no seeds. The room can be empty. */
 export function getAll() {
-  return [...SEED_PARTICIPANTS, ...cache];
+  return [...cache];
 }
 export function getById(id) {
   return getAll().find((p) => p.id === id) || null;

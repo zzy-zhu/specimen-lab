@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { CaptureIdea, Shake } from "../screens";
 import { Finale } from "../components/Finale";
 import { WaitingRoom } from "../components/WaitingRoom";
+import { ShakeResult } from "../components/ShakeResult";
 import { useScene } from "../lib/atmosphere";
 import { useMe, useRoom, useSession } from "../lib/hooks";
 import { usePresence } from "../hooks/usePresence";
@@ -43,8 +44,8 @@ export function LabFlow() {
 
   // shake to connect (host-held)
   if (st === "shake") {
-    if (shakeDone) return <WaitingRoom me={me} tag="OPEN LAB · SIGNATURE SAVED" title={"Signature\ncaptured"} sub="Waiting for the host to grow the Wood Wide Web…" />;
-    return <Shake onBack={() => nav("/menu")} onDone={(score) => { patch({ shake: score, part2Done: true }); setShakeDone(true); }} />;
+    if (shakeDone) return <ShakeResult me={me} people={room} />;
+    return <Shake onBack={() => nav("/menu")} onDone={(score, wave) => { patch({ shake: score, wave: wave || [], part2Done: true }); setShakeDone(true); }} />;
   }
 
   // the finale

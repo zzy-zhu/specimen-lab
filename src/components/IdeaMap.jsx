@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { PARTICIPANTS, THEME_SEEDS, themeFor } from "../data/lab";
+import { THEME_SEEDS, themeFor } from "../data/lab";
 
 function rng(seed) {
   let s = seed % 2147483647;
@@ -12,7 +12,7 @@ function rng(seed) {
  * is placed near its theme cluster; the current user's idea glows red.
  * (Clustering here is keyword-based; a live version would embed the text.)
  */
-export function IdeaMap({ myIdea, myTech, myName }) {
+export function IdeaMap({ myIdea, myTech, myName, people = [] }) {
   const W = 440;
   const H = 440;
 
@@ -26,7 +26,7 @@ export function IdeaMap({ myIdea, myTech, myName }) {
 
   const items = useMemo(() => {
     const rand = rng(42);
-    const all = PARTICIPANTS.map((p) => {
+    const all = people.filter((p) => (p.idea || "").trim() || (p.tech || "").trim()).map((p) => {
       const theme = themeFor(`${p.idea} ${p.tech}`);
       const a = anchors[theme.key];
       return {
@@ -50,7 +50,7 @@ export function IdeaMap({ myIdea, myTech, myName }) {
     }
     return all;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [myIdea, myTech, myName]);
+  }, [myIdea, myTech, myName, people]);
 
   const myTheme = myIdea || myTech ? themeFor(`${myIdea} ${myTech}`) : null;
 

@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wordmark } from "./components/Wordmark";
 import { GridBackground } from "./components/GridBackground";
 import { NameCard } from "./components/NameCard";
 import { FlipCard } from "./components/FlipCard";
+import { WaveChart } from "./components/WaveChart";
 import { TiltMeter } from "./components/TiltMeter";
 import { useTilt } from "./hooks/useTilt";
 import { useShake } from "./hooks/useShake";
@@ -20,14 +22,18 @@ export const fade = {
 
 /* ---------- chrome ---------- */
 export function Chrome({ part, progress = [], children, bgSeed = 7, onBack }) {
+  const nav = useNavigate();
   return (
     <motion.div className="screen" {...fade}>
       <GridBackground seed={bgSeed} nodes={10} />
       <div className="topbar">
-        <button className="wordmark-btn" onClick={onBack} aria-label="home">
+        <button className="wordmark-btn" onClick={() => nav("/")} aria-label="home">
           <Wordmark size={17} stacked />
         </button>
-        {part && <span className="eyebrow">{part}</span>}
+        <div className="topbar__right">
+          {onBack && <button className="backchip mono" onClick={onBack}>↩ return</button>}
+          {part && <span className="eyebrow">{part}</span>}
+        </div>
       </div>
       {progress.length > 0 && (
         <div className="progress" style={{ marginBottom: 22 }}>
@@ -247,19 +253,32 @@ export function Shake({ onDone, onBack }) {
   const gate = s.needsPermission && s.permission !== "granted" ? "permission" : "ok";
   useEffect(() => {
     if (s.score != null) {
-      const t = setTimeout(() => onDone(s.score), 900);
+      const t = setTimeout(() => onDone(s.score, s.wave), 1400);
       return () => clearTimeout(t);
     }
-  }, [s.score, onDone]);
+  }, [s.score, s.wave, onDone]);
 
   return (
     <Chrome part="PART 02 · OPEN LAB" progress={[true, true, false]} bgSeed={47} onBack={onBack}>
       <span className="step-tag">STEP 02 — SHAKE TO CONNECT</span>
       <h1 className="display" style={{ marginTop: 10 }}>Shake for<br />10 seconds</h1>
       <p className="lede" style={{ marginTop: 10 }}>Your motion becomes a signature. We'll pair you with a kindred rhythm — and an opposite one.</p>
-      <div className="grow center-col" style={{ justifyContent: "center" }}>
+      <div className="grow center-col" style={{ justifyContent: "center", gap: 18 }}>
         {gate === "permission" ? (
           <button className="btn btn-dark" style={{ width: "auto" }} onClick={s.request}>Enable motion sensor</button>
+        ) : s.score != null ? (
+          <div style={{ width: "100%" }}>
+            <span className="eyebrow" style={{ color: "var(--red)" }}>YOUR SHAKE SIGNATURE</span>
+            <WaveChart wave={s.wave} height={110} />
+            <p className="mono" style={{ textAlign: "center", marginTop: 6 }}>intensity {s.score}</p>
+          </div>
+        ) : s.recording ? (
+          <div style={{ width: "100%" }}>
+            <ShakeOrb shake={s} />
+            <div style={{ marginTop: 18 }}>
+              <WaveChart wave={s.liveWave} height={90} />
+            </div>
+          </div>
         ) : (
           <ShakeOrb shake={s} />
         )}

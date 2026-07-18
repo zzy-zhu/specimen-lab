@@ -15,6 +15,8 @@ export function useShake() {
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [score, setScore] = useState(null); // final signature 0..~12
+  const [wave, setWave] = useState([]); // downsampled waveform of the shake
+  const [liveWave, setLiveWave] = useState([]); // rolling waveform while shaking
   const [supported, setSupported] = useState(true);
   const [permission, setPermission] = useState("unknown");
 
@@ -63,6 +65,8 @@ export function useShake() {
     gotMotion.current = false;
     startedAt.current = performance.now();
     setScore(null);
+    setWave([]);
+    setLiveWave([]);
     setElapsed(0);
     setRecording(true);
   }, []);
@@ -73,10 +77,31 @@ export function useShake() {
     const tick = () => {
       const t = performance.now() - startedAt.current;
       setElapsed(Math.min(WINDOW_MS, t));
+      // live rolling waveform (last ~64 downsampled points)
+      const src = samples.current;
+      if (src.length) {
+        const N = 64;
+        const bucket = Math.max(1, Math.floor(src.length / N));
+        const w = [];
+        for (let i = 0; i < src.length; i += bucket) {
+          const sl = src.slice(i, i + bucket);
+          w.push(sl.reduce((s, v) => s + v, 0) / sl.length);
+        }
+        setLiveWave(w);
+      }
       if (t >= WINDOW_MS) {
         const arr = samples.current;
         const avg = arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : 0;
         setScore(Math.round(avg * 100) / 100);
+        // downsample to a ~64-point waveform for the chart
+        const N = 64;
+        const bucket = Math.max(1, Math.floor(arr.length / N));
+        const w = [];
+        for (let i = 0; i < arr.length; i += bucket) {
+          const slice = arr.slice(i, i + bucket);
+          w.push(slice.reduce((s, v) => s + v, 0) / slice.length);
+        }
+        setWave(w.length ? w : [0]);
         setSupported(gotMotion.current || arr.length > 0);
         setRecording(false);
         return;
@@ -116,6 +141,8 @@ export function useShake() {
     progress,
     secondsLeft,
     score,
+    wave,
+    liveWave,
     supported,
     needsPermission,
     permission,

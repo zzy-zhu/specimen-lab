@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Twin } from "../screens";
@@ -32,20 +32,17 @@ export function Session() {
     else if (!me) nav("/create", { replace: true });
   }, [me, nav]);
 
-  // record the current question's lean live as the host holds on it
-  const lastWrite = useRef(-1);
-  useEffect(() => {
+  // lock the answer when the specimen taps the screen (after leaning)
+  const q = session.q ?? 0;
+  const lockedSide = me?.answers?.[q];
+  const lockAnswer = () => {
     if (!active || !me) return;
     const side = tilt.tilt < -0.12 ? 0 : tilt.tilt > 0.12 ? 1 : null;
     if (side == null) return;
-    const q = session.q ?? 0;
-    const cur = me.answers?.[q];
-    if (cur === side && lastWrite.current === q) return;
     const answers = [...(me.answers || [])];
     answers[q] = side;
-    lastWrite.current = q;
     patch({ answers, part1Done: q >= QUESTIONS.length - 1 });
-  }, [tilt.tilt, active, session.q, me, patch]);
+  };
 
   // twin (revealed when host moves to 'twin')
   const [match, setMatch] = useState(null);
@@ -76,15 +73,18 @@ export function Session() {
 
   // ---- host-driven tension ----
   if (session.state === "tension") {
-    const q = QUESTIONS[session.q ?? 0];
+    const question = QUESTIONS[q];
     const gate = tilt.needsPermission && tilt.permission !== "granted";
     return (
       <motion.div className="screen screen--space session-tension" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <div className="topbar">
-          <span className="mono" style={{ color: "var(--aqua)" }}>● LIVE · GUIDED</span>
-          <span className="eyebrow" style={{ color: "var(--white)" }}>
-            {String((session.q ?? 0) + 1).padStart(2, "0")} / {String(QUESTIONS.length).padStart(2, "0")}
-          </span>
+          <button className="wordmark-btn" onClick={() => nav("/")}><span className="mono" style={{ color: "var(--aqua)" }}>● LIVE · GUIDED</span></button>
+          <div className="topbar__right">
+            <button className="backchip mono" onClick={() => nav("/menu")}>↩ menu</button>
+            <span className="eyebrow" style={{ color: "var(--white)" }}>
+              {String(q + 1).padStart(2, "0")} / {String(QUESTIONS.length).padStart(2, "0")}
+            </span>
+          </div>
         </div>
         {gate ? (
           <div className="grow center-col" style={{ justifyContent: "center", gap: 16 }}>
@@ -92,9 +92,19 @@ export function Session() {
             <button className="btn btn-dark" style={{ width: "auto" }} onClick={tilt.request}>Enable motion</button>
           </div>
         ) : (
-          <WaterTension q={q} tilt={tilt.tilt} />
+          <div className="tension-tap" onClick={lockAnswer}>
+            <WaterTension q={question} tilt={tilt.tilt} locked={lockedSide} />
+            {!tilt.supported && (
+              <div className="lean-btns" onClick={(e) => e.stopPropagation()}>
+                <button className="lean-btn" onClick={() => { tilt.setTilt(-0.85); }}>◀ {question.left}</button>
+                <button className="lean-btn" onClick={() => { tilt.setTilt(0.85); }}>{question.right} ▶</button>
+              </div>
+            )}
+            <span className="mono tension-tap__hint">
+              {lockedSide == null ? "tap the screen to lock your lean" : `✓ locked · ${lockedSide === 0 ? question.left : question.right}`}
+            </span>
+          </div>
         )}
-        <span className="mono session-wait">waiting for the host to advance…</span>
       </motion.div>
     );
   }

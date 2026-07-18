@@ -4,8 +4,9 @@
    your answer. Big, minimal, physical.
    `tilt` is normalized [-1,1]. `q` = { glyph, prompt, left, right }.
    ============================================================ */
-export function WaterTension({ q, tilt }) {
-  const side = tilt < -0.12 ? "left" : tilt > 0.12 ? "right" : "none";
+export function WaterTension({ q, tilt, locked }) {
+  const live = tilt < -0.12 ? "left" : tilt > 0.12 ? "right" : "none";
+  const side = locked != null ? (locked === 0 ? "left" : "right") : live;
   const k = 36; // surface tilt amplitude
   const leftY = 50 + k * tilt;
   const rightY = 50 - k * tilt;
@@ -39,7 +40,9 @@ export function WaterTension({ q, tilt }) {
           <line x1="0" y1={leftY} x2="100" y2={rightY} stroke="rgba(255,255,255,0.6)" strokeWidth="0.8" style={{ transition: "all 0.12s linear" }} />
         </svg>
         <span className="water__lean mono">
-          {side === "none" ? "tilt to lean" : side === "left" ? "◀ leaning " + q.left : "leaning " + q.right + " ▶"}
+          {locked != null
+            ? "✓ locked"
+            : side === "none" ? "tilt to lean" : side === "left" ? "◀ leaning " + q.left : "leaning " + q.right + " ▶"}
         </span>
       </div>
     </div>

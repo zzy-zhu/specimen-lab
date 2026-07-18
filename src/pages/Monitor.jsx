@@ -137,66 +137,64 @@ function Dashboard() {
         <div className="host-bar__btns">
           {st === "tension" && <button className="host-btn" onClick={prevQ} disabled={q === 0}>◀ Prev</button>}
           <button className="host-btn go" onClick={next}>{NEXT_LABEL[st]}</button>
-          {st !== "lobby" && <button className="host-btn" onClick={toLobby}>↺ Lobby</button>}
+          <button className="host-btn" onClick={toLobby}>↺ Reset game</button>
         </div>
       </div>
 
-      <div className="monitor__grid">
-        {/* left: live swarm hero + wood web */}
-        <div className="monitor__left">
-          <section className="monitor__swarm">
-            <span className="panel-tag mono">LIVE ROOM — headshots move with each phone</span>
-            <LiveSwarm people={room} />
-          </section>
-          <section className="monitor__web">
-            <span className="panel-tag mono">THE WOOD WIDE WEB — every specimen, every root</span>
-            <WoodWideWeb people={room} dark />
-          </section>
+      {st === "tension" ? (
+        /* Exercise 01 — only the moving part */
+        <section className="monitor__swarm monitor__swarm--full">
+          <span className="panel-tag mono">LIVE ROOM — {LABELS[st]} · headshots move as people lean</span>
+          <LiveSwarm people={room} />
+        </section>
+      ) : (
+        <div className="monitor__grid">
+          <div className="monitor__left">
+            <section className="monitor__swarm">
+              <span className="panel-tag mono">LIVE ROOM — headshots move with each phone</span>
+              <LiveSwarm people={room} />
+            </section>
+            <section className="monitor__web">
+              <span className="panel-tag mono">THE WOOD WIDE WEB — every specimen, every root</span>
+              <WoodWideWeb people={room} dark />
+            </section>
+          </div>
+          <div className="monitor__side">
+            <section className="panel">
+              <span className="panel-tag mono">CREATIVE TENSION — RESULTS</span>
+              <div className="stack gap-14" style={{ marginTop: 12 }}>
+                {tension.map(({ q, rightPct, voters }) => (
+                  <div key={q.id} className="mtension">
+                    <div className="mtension__row mono"><span>{q.glyph} {q.left}</span><span>{q.right}</span></div>
+                    <div className="mtension__track">
+                      <motion.div className="mtension__fill" animate={{ width: `${100 - rightPct}%` }} transition={{ duration: 0.7 }} />
+                      <span className="mtension__pct mono">{100 - rightPct} · {rightPct}</span>
+                    </div>
+                    <span className="mono mtension__n">{voters} votes</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+            <section className="panel">
+              <span className="panel-tag mono">✦ AI SYNTHESIS {ai ? `· ${ai.source === "claude" ? "Claude" : "local"}` : "· reading…"}</span>
+              <p className="monitor__overview">{ai?.overview || "Waiting for ideas to surface…"}</p>
+              <div className="ai-clusters">
+                {ai?.clusters?.map((c) => (
+                  <div key={c.label} className="ai-cluster">
+                    <div className="ai-cluster__head"><span className="ai-cluster__label">{c.label}</span><span className="mono">×{c.count}</span></div>
+                    <p className="ai-cluster__sum">{c.summary}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
         </div>
-
-        {/* right column */}
-        <div className="monitor__side">
-          <section className="panel">
-            <span className="panel-tag mono">CREATIVE TENSION — LIVE</span>
-            <div className="stack gap-14" style={{ marginTop: 12 }}>
-              {tension.map(({ q, rightPct, voters }) => (
-                <div key={q.id} className="mtension">
-                  <div className="mtension__row mono">
-                    <span>{q.glyph} {q.left}</span>
-                    <span>{q.right}</span>
-                  </div>
-                  <div className="mtension__track">
-                    <motion.div className="mtension__fill" animate={{ width: `${100 - rightPct}%` }} transition={{ duration: 0.7 }} />
-                    <span className="mtension__pct mono">{100 - rightPct} · {rightPct}</span>
-                  </div>
-                  <span className="mono mtension__n">{voters} votes</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="panel">
-            <span className="panel-tag mono">✦ AI SYNTHESIS {ai ? `· ${ai.source === "claude" ? "Claude" : "local"}` : "· reading…"}</span>
-            <p className="monitor__overview">{ai?.overview || "Waiting for ideas to surface…"}</p>
-            <div className="ai-clusters">
-              {ai?.clusters?.map((c) => (
-                <div key={c.label} className="ai-cluster">
-                  <div className="ai-cluster__head">
-                    <span className="ai-cluster__label">{c.label}</span>
-                    <span className="mono">×{c.count}</span>
-                  </div>
-                  <p className="ai-cluster__sum">{c.summary}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
-      </div>
+      )}
 
       <footer className="monitor__foot">
         <FuturePixelMark color="var(--white)" />
         <div className="monitor__foot-actions">
-          <button className="linklike mono dim" onClick={() => { if (window.confirm("Clear all real submissions? (seeds stay)")) resetRoom(); }}>reset room</button>
+          <button className="host-btn" onClick={() => { if (window.confirm("Clear ALL specimens + data from the room? This cannot be undone.")) resetRoom(); }}>⌫ Clear all users & data</button>
           <button className="linklike mono dim" onClick={() => nav("/")}>exit monitor</button>
         </div>
       </footer>

@@ -19,7 +19,7 @@ function tensionShared(a = [], b = []) {
   return s;
 }
 
-export function WoodWideWeb({ people, meId, dark = false }) {
+export function WoodWideWeb({ people, meId, dark = false, onNodeTap }) {
   const W = 460;
   const H = 460;
   const cx = W / 2;
@@ -115,7 +115,10 @@ export function WoodWideWeb({ people, meId, dark = false }) {
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1 + i * 0.05, type: "spring", stiffness: 260, damping: 18 }}
+            onClick={onNodeTap ? () => onNodeTap(n) : undefined}
+            style={onNodeTap ? { cursor: "pointer" } : undefined}
           >
+            {onNodeTap && <circle cx={n.x} cy={n.y} r={16} fill="transparent" />}
             {n.me && (
               <motion.circle
                 cx={n.x} cy={n.y} r={7} fill="none" stroke={strokeMine} strokeWidth="1.5"

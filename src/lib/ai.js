@@ -137,6 +137,24 @@ ${ideas}`;
   return json;
 }
 
+/* ---- open-lab match: closest shaker, summarized by ideas + shake ---- */
+export async function summarizeMatch(me, other) {
+  if (!other) return { reason: "" };
+  const local = `You and ${other.name} share a rhythm${me.tech && other.tech ? ` and a pull toward ${other.tech}` : ""}. Go compare notes.`;
+  if (!API_KEY) return { reason: local };
+  try {
+    const prompt = `Two people at Specimen.lab matched by how they shook their phones (a rhythm signature) and their creative ideas. Write ONE short, vivid sentence (name the other person) on why they should meet — reference their ideas/tech if given.
+ME: name unknown, idea="${me.idea || ""}" tech="${me.tech || ""}" shakeIntensity=${me.shake ?? "?"}
+THEM: name="${other.name}" idea="${other.idea || ""}" tech="${other.tech || ""}" shakeIntensity=${other.shake ?? "?"}
+Return just the sentence.`;
+    const text = await callClaude(prompt, 160);
+    return { reason: text.trim() || local, source: "claude" };
+  } catch (e) {
+    console.warn("summarizeMatch fallback:", e.message);
+    return { reason: local };
+  }
+}
+
 export async function summarizeIdeas(people) {
   if (API_KEY) {
     try {

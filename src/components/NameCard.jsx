@@ -1,56 +1,42 @@
 import { Wordmark } from "./Wordmark";
 
-/**
- * NameCard — a "digital specimen card" handed out when two people match.
- * `variant` colors the relationship (twin / similar / different).
- */
+/* ============================================================
+   NameCard — poster-style specimen card (from the reference):
+   a faded SPECI^MEN.lab watermark column on the left, the b/w
+   headshot on the right with the name in red + (role).
+   ============================================================ */
 export function NameCard({ person, image, variant = "twin", caption }) {
   const label =
-    variant === "twin"
-      ? "CREATIVE TWIN"
-      : variant === "similar"
-      ? "CLOSEST FREQUENCY"
-      : variant === "different"
-      ? "FURTHEST FREQUENCY"
-      : variant === "self"
-      ? "YOUR SPECIMEN"
-      : "SPECIMEN";
+    variant === "twin" ? "CREATIVE TWIN"
+    : variant === "similar" ? "CLOSEST FREQUENCY"
+    : variant === "different" ? "FURTHEST FREQUENCY"
+    : variant === "self" ? "YOUR SPECIMEN"
+    : "SPECIMEN";
 
   const src = image || person?.image;
   const accent =
-    variant === "different"
-      ? "var(--ink)"
-      : variant === "self"
-      ? "var(--aqua-deep)"
-      : person?.color || "var(--red)";
+    variant === "different" ? "#f7f5f3"
+    : variant === "self" ? "var(--aqua)"
+    : variant === "similar" ? "var(--aqua)"
+    : person?.color || "var(--red)";
 
   return (
-    <article className="namecard" style={{ "--accent": accent }}>
-      <header className="namecard__top">
-        <span className="mono">{label}</span>
-        <span className="mono">◇ {person?.id?.replace("p-", "").toUpperCase() || "YOU"}</span>
-      </header>
-
-      <div className="namecard__body">
-        <div className="namecard__avatar" aria-hidden={!src}>
-          {src ? (
-            <img src={src} alt="" />
-          ) : (
-            <span className="namecard__initial">{person?.name?.[0] ?? "?"}</span>
-          )}
-        </div>
-        <div className="namecard__ident">
-          <h3 className="namecard__name">{person?.name}</h3>
-          {person?.role && <p className="namecard__role">({person.role})</p>}
-        </div>
+    <article className="pcard" style={{ "--accent": accent }}>
+      <div className="pcard__wm" aria-hidden="true">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Wordmark key={i} size={17} stacked color="rgba(10,10,10,0.16)" />
+        ))}
       </div>
 
-      {caption && <p className="namecard__caption">{caption}</p>}
-
-      <footer className="namecard__foot">
-        <Wordmark size={13} stacked={false} color="var(--ink)" />
-        <span className="mono">2026.7.18</span>
-      </footer>
+      <div className="pcard__img">
+        {src ? <img src={src} alt="" /> : <span className="pcard__initial">{person?.name?.[0] ?? "?"}</span>}
+        <span className="pcard__tag mono">{label}</span>
+        <div className="pcard__overlay">
+          <h3 className="pcard__name">{person?.name}</h3>
+          {person?.role && <span className="pcard__role">({person.role})</span>}
+          {caption && <p className="pcard__cap">{caption}</p>}
+        </div>
+      </div>
     </article>
   );
 }

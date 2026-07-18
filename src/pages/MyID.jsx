@@ -5,7 +5,6 @@ import { NameCard } from "../components/NameCard";
 import { Wordmark } from "../components/Wordmark";
 import { useScene } from "../lib/atmosphere";
 import { useMe, useRoom } from "../lib/hooks";
-import { findTwin, findShakeMatches } from "../data/lab";
 import { unlockSession, deleteSpecimen } from "../lib/store";
 import { resetIntro } from "../lib/prefs";
 
@@ -32,15 +31,7 @@ export function MyID() {
     nav("/");
   };
 
-  const pool = useMemo(() => room.filter((p) => p.id !== me?.id), [room, me]);
-  const twin = useMemo(
-    () => (me?.answers?.length ? findTwin(me.answers, pool.filter((p) => p.answers?.length)) : null),
-    [me, pool]
-  );
-  const freq = useMemo(
-    () => (me?.shake != null ? findShakeMatches(me.shake, pool.filter((p) => p.shake != null)) : null),
-    [me, pool]
-  );
+  const others = useMemo(() => room.filter((p) => p.id !== me?.id), [room, me]);
 
   const submit = async () => {
     const r = await login(handle, passcode);
@@ -98,21 +89,37 @@ export function MyID() {
         <span className={`id-pill mono ${me.part2Done ? "done" : ""}`}>{me.part2Done ? "✓" : "○"} Part 02 · Open Lab</span>
       </div>
 
+      <div className="id-btns">
+        <button className="btn btn-ghost" onClick={() => nav("/create")}>✎ Edit profile</button>
+        <button className="btn btn-ghost" onClick={() => nav("/map")}>◍ Connection map</button>
+      </div>
       <button className="id-link mono" onClick={copyLink}>
-        {copied ? "✓ link copied" : `◇ your permanent link — /p/${me.handle}`}
+        {copied ? "✓ link copied" : `◇ share your profile — /p/${me.handle}`}
       </button>
 
-      <div className="stack gap-14" style={{ marginTop: 18 }}>
-        {twin?.twin && <NameCard person={twin.twin} image={twin.twin.image} variant="twin" caption={`creative twin · agreed on ${twin.shared}/${twin.total}`} />}
-        {freq?.similar && <NameCard person={freq.similar} image={freq.similar.image} variant="similar" caption="closest frequency" />}
-        {freq?.different && <NameCard person={freq.different} image={freq.different.image} variant="different" caption="furthest frequency" />}
+      {/* who's registered in the room right now */}
+      <div style={{ marginTop: 24 }}>
+        <span className="eyebrow" style={{ color: "var(--white)" }}>IN THE ROOM · {others.length}</span>
+        {others.length === 0 ? (
+          <p className="lede" style={{ color: "rgba(247,245,243,0.7)", marginTop: 8 }}>
+            No one else has registered yet. Their cards appear here as they join.
+          </p>
+        ) : (
+          <div className="people-grid">
+            {others.map((p) => (
+              <button key={p.id} className="people-tile" onClick={() => nav(`/p/${p.handle}`)}>
+                <div className="people-tile__img">
+                  {p.image ? <img src={p.image} alt="" /> : <span>{p.name?.[0] || "?"}</span>}
+                </div>
+                <span className="people-tile__name mono">{p.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="footer-actions">
-        <button className="btn btn-primary" onClick={() => nav("/menu")}>Enter the menu →</button>
-        {!me.part1Done && <button className="btn btn-ghost" onClick={() => nav("/tension")}>Do Part 01 →</button>}
-        {me.part1Done && !me.part2Done && <button className="btn btn-ghost" onClick={() => nav("/lab")}>Do Part 02 →</button>}
-        {me.part1Done && me.part2Done && <button className="btn btn-ghost" onClick={() => nav("/lab")}>Revisit the Wood Wide Web →</button>}
+        <button className="btn btn-primary" onClick={() => nav("/menu")}>Back to the menu →</button>
         <div className="id-actions">
           <button className="linklike mono" onClick={() => { logout(); }}>sign out</button>
           <button className="linklike mono" style={{ color: "var(--red)" }} onClick={clearData}>clear my data & replay</button>

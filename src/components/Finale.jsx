@@ -68,7 +68,7 @@ export function Finale({ people, me, onHome, onBack }) {
 
       <details className="map-details">
         <summary className="mono">▸ open the flat idea map</summary>
-        <IdeaMap myIdea={me?.idea} myTech={me?.tech} myName={me?.name} />
+        <IdeaMap myIdea={me?.idea} myTech={me?.tech} myName={me?.name} people={people} />
       </details>
 
       <div className="footer-actions">
