@@ -41,6 +41,9 @@ export const QUESTIONS = [
 
 /* answers are encoded 0 = left, 1 = right */
 
+/* code of the day — organizer rotates this per session to gate the menu */
+export const DAY_CODE = "specimenla";
+
 /* ---- seed participant pool (stands in for a pre-populated room) ---- */
 export const SEED_PARTICIPANTS = [
   {

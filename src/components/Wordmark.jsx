@@ -38,13 +38,14 @@ export function CornerBrand({ color = "var(--ink)" }) {
   );
 }
 
-export function AnimaMark({ color = "var(--ink)" }) {
+/* the session host mark */
+export function FuturePixelMark({ color = "var(--ink)" }) {
   return (
     <span style={{ color, lineHeight: 1 }}>
-      <strong style={{ fontSize: 18, letterSpacing: "-0.02em" }}>Anima</strong>
-      <span className="mono" style={{ display: "block", fontSize: 8, opacity: 0.7 }}>
-        Initiative
+      <span className="mono" style={{ display: "block", fontSize: 8, opacity: 0.7, letterSpacing: "0.14em" }}>
+        A SESSION BY
       </span>
+      <strong style={{ fontSize: 17, letterSpacing: "-0.01em" }}>*FuturePIXEL</strong>
     </span>
   );
 }

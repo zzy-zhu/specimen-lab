@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { WoodWideWeb } from "../components/WoodWideWeb";
-import { Wordmark, AnimaMark } from "../components/Wordmark";
+import { Wordmark, FuturePixelMark } from "../components/Wordmark";
 import { useScene, ListenButton } from "../lib/atmosphere";
 import { useRoom } from "../lib/hooks";
 import { QUESTIONS } from "../data/lab";
@@ -135,7 +135,7 @@ function Dashboard() {
       </div>
 
       <footer className="monitor__foot">
-        <AnimaMark color="var(--white)" />
+        <FuturePixelMark color="var(--white)" />
         <div className="monitor__foot-actions">
           <button className="linklike mono dim" onClick={() => { if (window.confirm("Clear all real submissions? (seeds stay)")) resetRoom(); }}>reset room</button>
           <button className="linklike mono dim" onClick={() => nav("/")}>exit monitor</button>

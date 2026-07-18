@@ -6,6 +6,7 @@ import { Wordmark } from "../components/Wordmark";
 import { useScene } from "../lib/atmosphere";
 import { useMe, useRoom } from "../lib/hooks";
 import { findTwin, findShakeMatches } from "../data/lab";
+import { unlockSession } from "../lib/store";
 
 export function MyID() {
   useScene({ tone: "space", accent: "aqua" });
@@ -29,7 +30,7 @@ export function MyID() {
   const submit = () => {
     const r = login(handle, passcode);
     if (!r.ok) setErr(r.reason === "not-found" ? "no specimen with that handle" : "wrong passcode");
-    else setErr("");
+    else { setErr(""); unlockSession(); }
   };
 
   if (!me) {
@@ -89,9 +90,10 @@ export function MyID() {
       </div>
 
       <div className="footer-actions">
-        {!me.part1Done && <button className="btn btn-primary" onClick={() => nav("/tension")}>Do Part 01 →</button>}
-        {me.part1Done && !me.part2Done && <button className="btn btn-primary" onClick={() => nav("/lab")}>Do Part 02 →</button>}
-        {me.part1Done && me.part2Done && <button className="btn btn-primary" onClick={() => nav("/lab")}>Revisit the Wood Wide Web →</button>}
+        <button className="btn btn-primary" onClick={() => nav("/menu")}>Enter the menu →</button>
+        {!me.part1Done && <button className="btn btn-ghost" onClick={() => nav("/tension")}>Do Part 01 →</button>}
+        {me.part1Done && !me.part2Done && <button className="btn btn-ghost" onClick={() => nav("/lab")}>Do Part 02 →</button>}
+        {me.part1Done && me.part2Done && <button className="btn btn-ghost" onClick={() => nav("/lab")}>Revisit the Wood Wide Web →</button>}
         <button className="linklike mono" onClick={() => { logout(); }}>sign out</button>
       </div>
     </motion.div>

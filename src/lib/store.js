@@ -128,6 +128,15 @@ export function subscribe(cb) {
   };
 }
 
+/* ---- session access (day code OR logged-in ID) ---- */
+const SESSION_KEY = "specimen.lab.session.ok";
+export function unlockSession() {
+  sessionStorage.setItem(SESSION_KEY, "1");
+}
+export function isSessionUnlocked() {
+  return sessionStorage.getItem(SESSION_KEY) === "1";
+}
+
 /* handy for the monitor demo */
 export function resetRoom() {
   localStorage.removeItem(ROOM_KEY);
