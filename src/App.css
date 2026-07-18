@@ -603,3 +603,27 @@
 /* space-screen text defaults for links/eyebrows */
 .screen--space .linklike { color: rgba(247,245,243,0.85); }
 .screen--space .field--dark::placeholder { color: rgba(247,245,243,0.4); }
+
+/* ---- artist posters (use the real images) ---- */
+.poster-list { display: flex; flex-direction: column; gap: 16px; margin-top: 18px; }
+.poster {
+  --accent: var(--red);
+  position: relative;
+  margin: 0;
+  border: 1px solid rgba(247,245,243,0.18);
+  background: #0c0f12;
+  overflow: hidden;
+  border-radius: 2px;
+}
+.poster__img { display: block; width: 100%; height: auto; }
+.poster__fallback { display: none; padding: 18px; color: var(--white); min-height: 200px; flex-direction: column; justify-content: flex-end; }
+.poster--noimg .poster__img { display: none; }
+.poster--noimg .poster__fallback { display: flex; }
+.poster--noimg { border-left: 4px solid var(--accent); background: rgba(6,8,10,0.6); }
+.poster__fallback h2 {
+  font-family: var(--sans); font-weight: 300; font-size: 26px;
+  text-transform: uppercase; letter-spacing: -0.02em; color: var(--accent); line-height: 1;
+}
+.poster__fallback .mono { display: block; font-size: 10px; opacity: 0.7; margin: 6px 0 8px; }
+.poster__fallback p { font-size: 13px; line-height: 1.45; opacity: 0.85; }
+.poster__hint { display: block !important; margin-top: 12px; opacity: 0.35 !important; font-size: 9px !important; }

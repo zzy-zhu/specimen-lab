@@ -6,8 +6,9 @@ import { useScene } from "../lib/atmosphere";
 import { useIsDesktop } from "../hooks/useIsDesktop";
 import { ARTISTS, LUMA } from "../data/artists";
 
-/* Today's artists — one column of poster cards on phone; a scan-to-phone
-   QR on laptop. */
+/* Today's artists — one column of the actual poster images on phone
+   (drop them at public/artists/<id>.jpg); a scan-to-phone QR on laptop.
+   If a poster file is missing, a text fallback shows so nothing breaks. */
 export function Artists() {
   useScene({ tone: "space", accent: "red" });
   const nav = useNavigate();
@@ -34,27 +35,30 @@ export function Artists() {
         {ARTISTS.length} specimens sharing tonight.
       </p>
 
-      <div className="artist-list">
+      <div className="poster-list">
         {ARTISTS.map((a, i) => (
-          <motion.article
+          <motion.figure
             key={a.id}
-            className="artist-card"
+            className="poster"
             style={{ "--accent": a.accent }}
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.04 * i }}
           >
-            <div className="artist-card__img">
-              <img src={`/artists/${a.id}.jpg`} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} />
-              <span className="artist-card__ph">{a.name.split(" ").map((w) => w[0]).join("")}</span>
-              <span className="artist-card__wm mono">(SPECI ^MEN.lab)</span>
-            </div>
-            <div className="artist-card__body">
+            <img
+              className="poster__img"
+              src={`/artists/${a.id}.jpg`}
+              alt={`${a.name} — ${a.role}`}
+              loading="lazy"
+              onError={(e) => { e.currentTarget.closest(".poster").classList.add("poster--noimg"); }}
+            />
+            <figcaption className="poster__fallback">
               <h2>{a.name}</h2>
-              <span className="artist-card__role mono">({a.role})</span>
+              <span className="mono">({a.role})</span>
               <p>{a.blurb}</p>
-            </div>
-          </motion.article>
+              <span className="poster__hint mono">poster: /artists/{a.id}.jpg</span>
+            </figcaption>
+          </motion.figure>
         ))}
       </div>
 
