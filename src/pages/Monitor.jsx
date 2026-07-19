@@ -7,7 +7,7 @@ import { NameCard } from "../components/NameCard";
 import { Wordmark, FuturePixelMark } from "../components/Wordmark";
 import { useScene, ListenButton } from "../lib/atmosphere";
 import { useRoom, useSession } from "../lib/hooks";
-import { QUESTIONS } from "../data/lab";
+import { QUESTIONS, findTwin } from "../data/lab";
 import { ARTISTS } from "../data/artists";
 import { summarizeIdeas } from "../lib/ai";
 import { resetRoom, setSession } from "../lib/store";
@@ -51,8 +51,9 @@ function Dashboard() {
   useScene({ tone: "space", accent: "aqua" });
   const room = useRoom();
   const session = useSession();
-  const [view, setView] = useState("menu"); // menu | users | tension | lab
+  const [view, setView] = useState("menu"); // menu | users | tension | lab | labbie | matches
   const [ai, setAi] = useState(null);
+  const [mq, setMq] = useState("");
 
   const st = session.state;
   const q = session.q ?? 0;
@@ -82,6 +83,20 @@ function Dashboard() {
   }, [view, withIdeas.length]);
 
   const clearAll = () => { if (window.confirm("Clear ALL specimens + data from the room? This cannot be undone.")) resetRoom(); };
+
+  // matches dashboard rows (prefer stored twin, else compute live)
+  const answered = useMemo(() => room.filter((p) => p.answers?.length), [room]);
+  const matchRows = useMemo(() => {
+    return answered.map((p) => {
+      const t = p.twin || (() => { const r = findTwin(p.answers, answered.filter((o) => o.id !== p.id)); return r.twin ? { name: r.twin.name, shared: r.shared, total: r.total, reason: "" } : null; })();
+      return {
+        id: p.id, name: p.name || "—", handle: p.handle,
+        twinName: t?.name || "—", shared: t?.shared ?? 0, total: t?.total ?? QUESTIONS.length,
+        idea: p.idea, shake: p.shake,
+      };
+    }).sort((a, b) => a.name.localeCompare(b.name));
+  }, [answered]);
+  const filteredRows = matchRows.filter((r) => !mq || (r.name + r.twinName).toLowerCase().includes(mq.toLowerCase()));
 
   // ---- header (shared) ----
   const Header = () => (
@@ -122,6 +137,12 @@ function Dashboard() {
             <p>Ideas, shake-to-connect, and the Wood Wide Web. Manual start.</p>
             <span className="mon-card__meta mono">{["lab-lobby", "idea", "shake", "web"].includes(st) ? "live · " + st : "not started"}</span>
           </button>
+          <button className="mon-card" onClick={() => setView("matches")}>
+            <span className="mon-card__no mono">⇄</span>
+            <h2>Matches</h2>
+            <p>Everyone's creative twin — pull up a result when someone asks.</p>
+            <span className="mon-card__meta mono">{answered.length} matched</span>
+          </button>
           <button className="mon-card" onClick={() => setView("labbie")}>
             <span className="mon-card__no mono">✦</span>
             <h2>Today's Labbie</h2>
@@ -129,6 +150,32 @@ function Dashboard() {
             <span className="mon-card__meta mono">{ARTISTS.length} artists</span>
           </button>
         </div>
+      )}
+
+      {view === "matches" && (
+        <section className="monitor__cards" style={{ flex: 1, overflowY: "auto", paddingTop: 10 }}>
+          <div className="matches-head">
+            <span className="panel-tag mono">CREATIVE TWINS — {matchRows.length} MATCHED</span>
+            <input className="field field--dark matches-search" placeholder="search a name…" value={mq} onChange={(e) => setMq(e.target.value)} />
+          </div>
+          {filteredRows.length === 0 ? (
+            <Empty text="No matches yet — nobody has finished Creative Tension." />
+          ) : (
+            <table className="matches-table">
+              <thead><tr><th>Specimen</th><th></th><th>Creative twin</th><th>Aligned</th></tr></thead>
+              <tbody>
+                {filteredRows.map((r) => (
+                  <tr key={r.id}>
+                    <td className="matches-name">{r.name}</td>
+                    <td className="matches-arrow">⇄</td>
+                    <td className="matches-twin">{r.twinName}</td>
+                    <td className="matches-score mono">{r.shared}/{r.total}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
       )}
 
       {view === "labbie" && (

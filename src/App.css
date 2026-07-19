@@ -938,3 +938,18 @@
 }
 
 .mon-count { color: var(--aqua); font-size: 12px; letter-spacing: 0.08em; margin-right: 8px; }
+
+/* ---- matches dashboard ---- */
+.matches-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 6px; }
+.matches-search { max-width: 260px; padding: 8px 12px; font-size: 13px; }
+.matches-table { width: 100%; border-collapse: collapse; margin-top: 14px; color: var(--white); }
+.matches-table th {
+  text-align: left; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: rgba(247,245,243,0.5); padding: 8px 10px; border-bottom: 1px solid rgba(247,245,243,0.2);
+}
+.matches-table td { padding: 12px 10px; border-bottom: 1px solid rgba(247,245,243,0.08); font-size: 15px; }
+.matches-name { font-weight: 500; }
+.matches-arrow { color: var(--aqua); width: 30px; text-align: center; }
+.matches-twin { color: var(--red); font-weight: 500; }
+.matches-score { color: var(--aqua); white-space: nowrap; }
+.matches-table tr:hover td { background: rgba(255,255,255,0.03); }

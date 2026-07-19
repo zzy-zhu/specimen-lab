@@ -70,9 +70,12 @@ export function Results() {
         <section style={{ marginTop: 8 }}>
           <span className="step-tag">EVENT 01 · CREATIVE TWIN</span>
           <p className="lede" style={{ color: "rgba(247,245,243,0.75)", margin: "8px 0 14px" }}>
-            You agreed on {twinLocal?.shared}/{twinLocal?.total ?? QUESTIONS.length} tensions.
+            You agreed on {me.twin?.shared ?? twinLocal?.shared}/{me.twin?.total ?? twinLocal?.total ?? QUESTIONS.length} tensions.
           </p>
-          {twinLocal?.twin ? (
+          {me.twin?.name ? (
+            <FlipCard person={me.twin} image={me.twin.image} variant="twin"
+              reason={twinReason || me.twin.reason || `“${me.twin.idea || "still forming an idea"}”`} autoFlipMs={700} />
+          ) : twinLocal?.twin ? (
             <FlipCard person={twinLocal.twin} image={twinLocal.twin.image} variant="twin"
               reason={twinReason || `“${twinLocal.twin.idea || "still forming an idea"}”`} autoFlipMs={700} />
           ) : (
