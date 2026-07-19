@@ -8,6 +8,7 @@
    ============================================================ */
 import { ref, onValue, set, update, remove, get, child } from "firebase/database";
 import { db, EVENT_ID } from "./firebase";
+import { setCookie, getCookie, delCookie } from "./prefs";
 
 const SPECIMENS = `rooms/${EVENT_ID}/specimens`;
 const SESSION = `rooms/${EVENT_ID}/session`;
@@ -18,7 +19,7 @@ const SESSION_KEY = "specimen.lab.session.ok";
 const PALETTE = ["#e5241c", "#12c9bc", "#0a0a0a"];
 
 let cache = []; // live db specimens
-let session = { state: "lobby", q: 0 }; // host-controlled session
+let session = { state: "lobby", q: 0, tphase: "ask" }; // host-controlled session
 const listeners = new Set();
 const notify = () => listeners.forEach((cb) => cb());
 
@@ -32,7 +33,7 @@ onValue(
 /* host-controlled session state */
 onValue(
   ref(db, SESSION),
-  (snap) => { session = snap.val() || { state: "lobby", q: 0 }; notify(); },
+  (snap) => { session = snap.val() || { state: "lobby", q: 0, tphase: "ask" }; notify(); },
   () => {}
 );
 
@@ -169,12 +170,18 @@ export function subscribe(cb) {
   return () => listeners.delete(cb);
 }
 
-/* ---- session access (day code OR logged-in ID) ---- */
+/* ---- session access (day code OR logged-in ID) ----
+   Persisted in a cookie so returning specimens don't re-enter the code. */
 export function unlockSession() {
   sessionStorage.setItem(SESSION_KEY, "1");
+  setCookie("sl_code", "1");
 }
 export function isSessionUnlocked() {
-  return sessionStorage.getItem(SESSION_KEY) === "1";
+  return sessionStorage.getItem(SESSION_KEY) === "1" || getCookie("sl_code") === "1";
+}
+export function lockSession() {
+  sessionStorage.removeItem(SESSION_KEY);
+  delCookie("sl_code");
 }
 
 /* a specimen clears their own data (RTDB record + local identity) */

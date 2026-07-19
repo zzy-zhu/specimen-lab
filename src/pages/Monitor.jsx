@@ -8,6 +8,7 @@ import { Wordmark, FuturePixelMark } from "../components/Wordmark";
 import { useScene, ListenButton } from "../lib/atmosphere";
 import { useRoom, useSession } from "../lib/hooks";
 import { QUESTIONS } from "../data/lab";
+import { ARTISTS } from "../data/artists";
 import { summarizeIdeas } from "../lib/ai";
 import { resetRoom, setSession } from "../lib/store";
 
@@ -59,6 +60,18 @@ function Dashboard() {
   const ideaCount = room.filter((p) => (p.idea || "").trim()).length;
   const shakeCount = room.filter((p) => p.shake != null).length;
   const withIdeas = useMemo(() => room.filter((p) => (p.idea || "").trim()), [room]);
+  const tphase = session.tphase || "ask";
+
+  // 3-2-1 countdown at the start of the tension game
+  const [count, setCount] = useState(3);
+  useEffect(() => {
+    if (!(st === "tension" && tphase === "count")) return;
+    setCount(3);
+    const t1 = setTimeout(() => setCount(2), 1000);
+    const t2 = setTimeout(() => setCount(1), 2000);
+    const t3 = setTimeout(() => setSession({ tphase: "ask" }), 3000);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [st, tphase, session.q]);
 
   useEffect(() => {
     if (view !== "lab") return;
@@ -109,7 +122,33 @@ function Dashboard() {
             <p>Ideas, shake-to-connect, and the Wood Wide Web. Manual start.</p>
             <span className="mon-card__meta mono">{["lab-lobby", "idea", "shake", "web"].includes(st) ? "live · " + st : "not started"}</span>
           </button>
+          <button className="mon-card" onClick={() => setView("labbie")}>
+            <span className="mon-card__no mono">✦</span>
+            <h2>Today's Labbie</h2>
+            <p>Tonight's featured artists & hosts — the lineup on the big screen.</p>
+            <span className="mon-card__meta mono">{ARTISTS.length} artists</span>
+          </button>
         </div>
+      )}
+
+      {view === "labbie" && (
+        <section className="monitor__cards" style={{ flex: 1, overflowY: "auto", paddingTop: 10 }}>
+          <span className="panel-tag mono">TODAY'S LABBIE — {ARTISTS.length} ARTISTS</span>
+          <div className="labbie-grid">
+            {ARTISTS.map((a) => (
+              <article key={a.id} className="labbie-card" style={{ "--accent": a.accent }}>
+                <div className="labbie-card__img">
+                  <img src={`/artists/${a.id}.jpg`} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                  <span className="labbie-card__ph">{a.name.split(" ").map((w) => w[0]).join("")}</span>
+                </div>
+                <div className="labbie-card__body">
+                  <h3>{a.name}</h3>
+                  <span className="mono">({a.role})</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
       )}
 
       {view === "users" && (
@@ -133,36 +172,59 @@ function Dashboard() {
       )}
 
       {view === "tension" && (
-        <>
-          <ControlBar
-            label={st === "tension" ? `CREATIVE TENSION · Q${q + 1}/${QUESTIONS.length} · ${answeredQ}/${room.length} answered` : "CREATIVE TENSION · READY"}
-            buttons={
-              st === "tension" ? (
-                <>
-                  <button className="host-btn" onClick={() => setSession({ q: Math.max(0, q - 1) })} disabled={q === 0}>◀ Prev</button>
-                  <button className="host-btn go" onClick={() => (q + 1 >= QUESTIONS.length ? setSession({ state: "twin" }) : setSession({ q: q + 1 }))}>
-                    {q + 1 >= QUESTIONS.length ? "Reveal twins ▶" : "Next question ▶"}
-                  </button>
-                  <button className="host-btn" onClick={() => setSession({ state: "lobby", q: 0 })}>↺ Reset</button>
-                </>
-              ) : (
-                <button className="host-btn go" onClick={() => setSession({ state: "tension", q: 0 })}>▶ Start Creative Tension</button>
-              )
-            }
-          />
+        <div className="ex-stage">
+          {/* big question on top */}
+          {st === "tension" && tphase !== "count" && (
+            <div className="ex-question">
+              <span className="ex-question__glyph">{QUESTIONS[q].glyph}</span>
+              <h1 className="ex-question__prompt">{QUESTIONS[q].prompt}</h1>
+              <div className="ex-question__opts mono"><span>◀ {QUESTIONS[q].left}</span><span>{QUESTIONS[q].right} ▶</span></div>
+            </div>
+          )}
+
+          {/* body */}
           <section className="monitor__swarm monitor__swarm--full">
-            <span className="panel-tag mono">LIVE ROOM — headshots move as people lean · locked = frozen & bigger</span>
-            {room.length ? <LiveSwarm people={room} lockedQ={st === "tension" ? q : null} /> : <Empty text="Waiting for specimens to join…" />}
+            {st === "tension" && tphase === "count" ? (
+              <div className="ex-count"><span className="ex-count__num">{count}</span><span className="mono">get ready…</span></div>
+            ) : room.length ? (
+              <LiveSwarm people={room} lockedQ={st === "tension" && tphase !== "count" ? q : null} />
+            ) : (
+              <Empty text="Waiting for specimens to join…" />
+            )}
+            {st === "tension" && tphase === "result" && (
+              <div className="ex-result mono">{answeredQ}/{room.length} locked in · results frozen</div>
+            )}
           </section>
-        </>
+
+          {/* centered controls */}
+          <div className="mon-controls">
+            {st !== "tension" && (
+              <button className="host-btn go big" onClick={() => setSession({ state: "tension", q: 0, tphase: "count" })}>▶ Start Creative Tension</button>
+            )}
+            {st === "tension" && tphase === "ask" && (
+              <button className="host-btn go big" onClick={() => setSession({ tphase: "result" })}>■ End question</button>
+            )}
+            {st === "tension" && tphase === "result" && (
+              <button className="host-btn go big" onClick={() => (q + 1 >= QUESTIONS.length ? setSession({ state: "twin" }) : setSession({ q: q + 1, tphase: "ask" }))}>
+                {q + 1 >= QUESTIONS.length ? "Reveal twins ▶" : "Next question ▶"}
+              </button>
+            )}
+            {st === "tension" && <button className="host-btn" onClick={() => setSession({ state: "lobby", q: 0, tphase: "ask" })}>↺ Reset</button>}
+          </div>
+        </div>
       )}
 
       {view === "lab" && (
-        <>
-          <ControlBar
-            label={`OPEN LAB · ${st === "idea" ? `${ideaCount}/${room.length} ideas` : st === "shake" ? `${shakeCount}/${room.length} shook` : st === "web" ? "wood wide web" : "ready"}`}
-            buttons={<LabButtons st={st} />}
-          />
+        <div className="ex-stage">
+          <div className="ex-question">
+            <h1 className="ex-question__prompt">
+              {st === "idea" ? "Capture an idea" : st === "shake" ? "Shake to connect" : st === "web" ? "The Wood Wide Web" : "Open Lab"}
+            </h1>
+            <div className="ex-question__opts mono">
+              <span>{st === "idea" ? `${ideaCount}/${room.length} ideas in` : st === "shake" ? `${shakeCount}/${room.length} shaken` : st === "web" ? "the room, connected" : "ready when you are"}</span>
+            </div>
+          </div>
+
           <div className="monitor__grid">
             <section className="monitor__web">
               <span className="panel-tag mono">LIVE ROOM</span>
@@ -183,7 +245,12 @@ function Dashboard() {
               </div>
             </section>
           </div>
-        </>
+
+          {/* centered controls */}
+          <div className="mon-controls">
+            <LabButtons st={st} />
+          </div>
+        </div>
       )}
 
       <footer className="monitor__foot">
@@ -206,21 +273,12 @@ function LabButtons({ st }) {
     if (st === "shake") return setSession({ state: "web" });
     return setSession({ state: "lobby", q: 0 });
   };
-  if (!inLab) return <button className="host-btn go" onClick={() => setSession({ state: "lab-lobby" })}>▶ Start Open Lab</button>;
+  if (!inLab) return <button className="host-btn go big" onClick={() => setSession({ state: "lab-lobby" })}>▶ Start Open Lab</button>;
   return (
     <>
-      <button className="host-btn go" onClick={next}>{nextLabel[st]}</button>
-      <button className="host-btn" onClick={() => setSession({ state: "lobby", q: 0 })}>↺ Reset</button>
+      <button className="host-btn go big" onClick={next}>{nextLabel[st]}</button>
+      <button className="host-btn" onClick={() => setSession({ state: "lobby", q: 0, tphase: "ask" })}>↺ Reset</button>
     </>
-  );
-}
-
-function ControlBar({ label, buttons }) {
-  return (
-    <div className="host-bar">
-      <span className="host-bar__state mono">NOW: <b>{label}</b></span>
-      <div className="host-bar__btns">{buttons}</div>
-    </div>
   );
 }
 

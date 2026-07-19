@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Wordmark } from "../components/Wordmark";
 import { useScene } from "../lib/atmosphere";
+import { useEffect } from "react";
 import { DAY_CODE } from "../data/lab";
-import { unlockSession, getMe } from "../lib/store";
+import { unlockSession, getMe, isSessionUnlocked } from "../lib/store";
 
 /* Code-of-the-day gate. Arrives out of the black cover transition.
    Returning attendees can log in their saved ID instead. */
@@ -13,6 +14,11 @@ export function Enter() {
   const nav = useNavigate();
   const [code, setCode] = useState("");
   const [err, setErr] = useState(false);
+
+  // already unlocked (cookie) → skip the code entirely
+  useEffect(() => {
+    if (isSessionUnlocked()) nav(getMe() ? "/menu" : "/create", { replace: true });
+  }, [nav]);
 
   const submit = () => {
     if (code.trim().toLowerCase() === DAY_CODE) {
