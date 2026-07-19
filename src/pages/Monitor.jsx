@@ -151,8 +151,8 @@ function Dashboard() {
             }
           />
           <section className="monitor__swarm monitor__swarm--full">
-            <span className="panel-tag mono">LIVE ROOM — headshots move as people lean</span>
-            {room.length ? <LiveSwarm people={room} /> : <Empty text="Waiting for specimens to join…" />}
+            <span className="panel-tag mono">LIVE ROOM — headshots move as people lean · locked = frozen & bigger</span>
+            {room.length ? <LiveSwarm people={room} lockedQ={st === "tension" ? q : null} /> : <Empty text="Waiting for specimens to join…" />}
           </section>
         </>
       )}

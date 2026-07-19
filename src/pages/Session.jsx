@@ -23,8 +23,12 @@ export function Session() {
   const session = useSession();
 
   const active = session.state === "tension";
-  const tilt = useTilt(active && !!me);
-  usePresence(me?.id, active && !!me);
+  const q = session.q ?? 0;
+  const lockedSide = me?.answers?.[q];
+  const locked = lockedSide != null;
+  const tilt = useTilt(active && !!me && !locked);
+  // stop publishing position once locked → the monitor headshot freezes
+  usePresence(me?.id, active && !!me && !locked);
 
   // guard: need day code, then a profile
   useEffect(() => {
@@ -33,9 +37,6 @@ export function Session() {
   }, [me, nav]);
 
   // lock the answer when the specimen taps the screen (after leaning)
-  const q = session.q ?? 0;
-  const lockedSide = me?.answers?.[q];
-  const locked = lockedSide != null;
   const lockAnswer = () => {
     if (!active || !me || locked) return; // already locked → frozen
     const side = tilt.tilt < -0.12 ? 0 : tilt.tilt > 0.12 ? 1 : null;

@@ -15,12 +15,13 @@ function hashPos(id) {
   return { x: 0.08 + x * 0.84, y: 0.1 + y * 0.8 };
 }
 
-export function LiveSwarm({ people, meId }) {
+export function LiveSwarm({ people, meId, lockedQ }) {
   const dots = useMemo(
     () =>
       people.filter((p) => p && p.id && p.name).map((p) => {
         const live = p.live;
         const base = hashPos(p.id);
+        const locked = lockedQ != null && p.answers?.[lockedQ] != null;
         return {
           id: p.id,
           name: p.name,
@@ -31,9 +32,10 @@ export function LiveSwarm({ people, meId }) {
           y: live?.y ?? base.y,
           hot: (live?.m ?? 0) > 0.2,
           moving: !!live,
+          locked,
         };
       }),
-    [people, meId]
+    [people, meId, lockedQ]
   );
 
   return (
@@ -41,7 +43,7 @@ export function LiveSwarm({ people, meId }) {
       {dots.map((d) => (
         <div
           key={d.id}
-          className={`swarm__dot ${d.hot ? "hot" : ""} ${d.moving ? "moving" : "idle"}`}
+          className={`swarm__dot ${d.hot ? "hot" : ""} ${d.moving ? "moving" : "idle"} ${d.locked ? "locked" : ""}`}
           style={{ left: `${d.x * 100}%`, top: `${d.y * 100}%`, "--c": d.color }}
           title={d.name}
         >
