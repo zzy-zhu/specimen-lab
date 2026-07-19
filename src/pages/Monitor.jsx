@@ -11,7 +11,7 @@ import { QUESTIONS } from "../data/lab";
 import { summarizeIdeas } from "../lib/ai";
 import { resetRoom, setSession } from "../lib/store";
 
-const PASSCODE = "fph";
+const PASSCODE = "fph2026";
 const KEY = "specimen.lab.monitor.ok";
 
 export function Monitor() {
