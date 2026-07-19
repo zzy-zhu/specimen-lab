@@ -68,6 +68,20 @@ export function Menu() {
         </motion.button>
       </div>
 
+      {(me?.answers?.length || me?.shake != null) && (
+        <motion.button variants={rise} className="exp-card" style={{ marginTop: 12 }} onClick={() => nav("/results")}>
+          <span className="exp-card__no mono">◆</span>
+          <div className="exp-card__body">
+            <h2>Your results</h2>
+            <p>Revisit your creative twin and shake matches any time.</p>
+            <span className="exp-card__meta mono">
+              {[me?.answers?.length ? "twin" : null, me?.shake != null ? "frequency" : null].filter(Boolean).join(" · ")}
+            </span>
+          </div>
+          <span className="exp-card__go">→</span>
+        </motion.button>
+      )}
+
       <motion.div variants={rise} className="menu-extra">
         <button className="btn btn-ghost" onClick={() => nav("/artists")}>Today's artists →</button>
         <a className="btn btn-ghost" href={LUMA_URL} target="_blank" rel="noreferrer">RSVP on Luma ↗</a>

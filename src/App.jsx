@@ -12,6 +12,7 @@ import { LabFlow } from "./pages/LabFlow";
 import { MyID } from "./pages/MyID";
 import { Profile } from "./pages/Profile";
 import { Map } from "./pages/Map";
+import { Results } from "./pages/Results";
 import { Monitor } from "./pages/Monitor";
 import { CookieBanner } from "./components/CookieBanner";
 
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="/lab" element={<LabFlow />} />
         <Route path="/me" element={<MyID />} />
         <Route path="/map" element={<Map />} />
+        <Route path="/results" element={<Results />} />
         <Route path="/p/:handle" element={<Profile />} />
         <Route path="/monitor" element={<Monitor />} />
         <Route path="*" element={<Navigate to="/" replace />} />
