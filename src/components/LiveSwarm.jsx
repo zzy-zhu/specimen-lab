@@ -7,8 +7,9 @@ import { useMemo } from "react";
    pseudo-random spot so the field is never empty.
    ============================================================ */
 function hashPos(id) {
+  const s = String(id || "");
   let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
   const x = ((h >>> 3) % 1000) / 1000;
   const y = ((h >>> 13) % 1000) / 1000;
   return { x: 0.08 + x * 0.84, y: 0.1 + y * 0.8 };
@@ -17,7 +18,7 @@ function hashPos(id) {
 export function LiveSwarm({ people, meId }) {
   const dots = useMemo(
     () =>
-      people.map((p) => {
+      people.filter((p) => p && p.id && p.name).map((p) => {
         const live = p.live;
         const base = hashPos(p.id);
         return {

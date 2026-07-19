@@ -26,7 +26,7 @@ export function WoodWideWeb({ people, meId, dark = false, onNodeTap }) {
   const cy = H / 2;
 
   const nodes = useMemo(() => {
-    const list = people.filter(Boolean);
+    const list = people.filter((p) => p && p.id && p.name);
     // cluster by theme into angular sectors, spiral outwards within
     const perTheme = {};
     return list.map((p) => {

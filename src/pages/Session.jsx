@@ -35,14 +35,17 @@ export function Session() {
   // lock the answer when the specimen taps the screen (after leaning)
   const q = session.q ?? 0;
   const lockedSide = me?.answers?.[q];
+  const locked = lockedSide != null;
   const lockAnswer = () => {
-    if (!active || !me) return;
+    if (!active || !me || locked) return; // already locked → frozen
     const side = tilt.tilt < -0.12 ? 0 : tilt.tilt > 0.12 ? 1 : null;
     if (side == null) return;
     const answers = [...(me.answers || [])];
     answers[q] = side;
     patch({ answers, part1Done: q >= QUESTIONS.length - 1 });
   };
+  // once locked, freeze the water at the chosen side (no more movement)
+  const shownTilt = locked ? (lockedSide === 0 ? -0.9 : 0.9) : tilt.tilt;
 
   // twin (revealed when host moves to 'twin')
   const [match, setMatch] = useState(null);
@@ -92,16 +95,16 @@ export function Session() {
             <button className="btn btn-dark" style={{ width: "auto" }} onClick={tilt.request}>Enable motion</button>
           </div>
         ) : (
-          <div className="tension-tap" onClick={lockAnswer}>
-            <WaterTension q={question} tilt={tilt.tilt} locked={lockedSide} />
-            {!tilt.supported && (
+          <div className={`tension-tap ${locked ? "locked" : ""}`} onClick={lockAnswer}>
+            <WaterTension q={question} tilt={shownTilt} locked={lockedSide} />
+            {!tilt.supported && !locked && (
               <div className="lean-btns" onClick={(e) => e.stopPropagation()}>
                 <button className="lean-btn" onClick={() => { tilt.setTilt(-0.85); }}>◀ {question.left}</button>
                 <button className="lean-btn" onClick={() => { tilt.setTilt(0.85); }}>{question.right} ▶</button>
               </div>
             )}
             <span className="mono tension-tap__hint">
-              {lockedSide == null ? "tap the screen to lock your lean" : `✓ locked · ${lockedSide === 0 ? question.left : question.right}`}
+              {locked ? `✓ locked · ${lockedSide === 0 ? question.left : question.right} — waiting for the host` : "tap the screen to lock your lean"}
             </span>
           </div>
         )}
