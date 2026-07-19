@@ -4,8 +4,8 @@ import { motion } from "framer-motion";
 import { FlipCard } from "../components/FlipCard";
 import { Wordmark, FuturePixelMark } from "../components/Wordmark";
 import { useScene } from "../lib/atmosphere";
-import { useRoom } from "../lib/hooks";
-import { normHandle } from "../lib/store";
+import { useMe, useRoom } from "../lib/hooks";
+import { normHandle, isSessionUnlocked } from "../lib/store";
 
 /* Public, shareable specimen profile — the permanent lab-member link. */
 export function Profile() {
@@ -13,6 +13,12 @@ export function Profile() {
   const { handle } = useParams();
   const nav = useNavigate();
   const room = useRoom();
+  const { me } = useMe();
+  const insider = !!me || isSessionUnlocked(); // already in the experience
+  const goBack = () => {
+    if (window.history.length > 1) nav(-1);
+    else nav(insider ? "/me" : "/");
+  };
   const person = useMemo(
     () => room.find((p) => p.handle === normHandle(handle)),
     [room, handle]
@@ -22,7 +28,10 @@ export function Profile() {
     <motion.div className="screen screen--space" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <div className="topbar">
         <button className="wordmark-btn" onClick={() => nav("/")}><Wordmark size={17} stacked color="var(--white)" /></button>
-        <FuturePixelMark color="var(--white)" size={11} />
+        <div className="topbar__right">
+          {insider && <button className="backchip mono" onClick={goBack}>↩ back</button>}
+          <FuturePixelMark color="var(--white)" size={11} />
+        </div>
       </div>
 
       <span className="step-tag">SPECIMEN · PERMANENT MEMBER</span>
@@ -48,10 +57,16 @@ export function Profile() {
       </div>
 
       <div className="footer-actions">
-        <button className="btn btn-primary" onClick={() => nav("/")}>Join Specimen.lab →</button>
-        <span className="mono" style={{ opacity: 0.5, textAlign: "center", color: "var(--white)" }}>
-          a living archive of contamination
-        </span>
+        {insider ? (
+          <button className="btn btn-primary" onClick={goBack}>↩ Return</button>
+        ) : (
+          <>
+            <button className="btn btn-primary" onClick={() => nav("/")}>Join Specimen.lab →</button>
+            <span className="mono" style={{ opacity: 0.5, textAlign: "center", color: "var(--white)" }}>
+              a living archive of contamination
+            </span>
+          </>
+        )}
       </div>
     </motion.div>
   );
