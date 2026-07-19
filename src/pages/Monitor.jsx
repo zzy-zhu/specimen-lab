@@ -198,6 +198,7 @@ function Dashboard() {
 
           {/* centered controls */}
           <div className="mon-controls">
+            <span className="mon-count mono">◉ {room.length} in the room</span>
             {st !== "tension" && (
               <button className="host-btn go big" onClick={() => setSession({ state: "tension", q: 0, tphase: "count" })}>▶ Start Creative Tension</button>
             )}
@@ -248,6 +249,7 @@ function Dashboard() {
 
           {/* centered controls */}
           <div className="mon-controls">
+            <span className="mon-count mono">◉ {room.length} in the room</span>
             <LabButtons st={st} />
           </div>
         </div>
