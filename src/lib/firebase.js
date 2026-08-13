@@ -18,5 +18,5 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
 
-/* which room/session participants share. Rotate per event if desired. */
-export const EVENT_ID = import.meta.env.VITE_EVENT_ID || "live";
+/* Rooms are per-event and live in data/events.js — the store attaches to
+   rooms/<event.room>. VITE_EVENT_ID still overrides the LA room. */

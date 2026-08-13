@@ -5,11 +5,11 @@ import { Twin } from "../screens";
 import { WaterTension } from "../components/WaterTension";
 import { WaitingRoom } from "../components/WaitingRoom";
 import { useScene } from "../lib/atmosphere";
-import { useMe, useRoom, useSession } from "../lib/hooks";
+import { useEvent, useMe, useRoom, useSession } from "../lib/hooks";
 import { useTilt } from "../hooks/useTilt";
 import { usePresence } from "../hooks/usePresence";
-import { QUESTIONS, findTwin } from "../data/lab";
-import { matchmake } from "../lib/ai";
+import { findTwin } from "../data/lab";
+import { matchmake, describeTwin } from "../lib/ai";
 import { isSessionUnlocked } from "../lib/store";
 
 /* The phone's live screen — everything here is driven by the host's
@@ -21,6 +21,8 @@ export function Session() {
   const { me, patch } = useMe();
   const room = useRoom();
   const session = useSession();
+  const ev = useEvent();
+  const QUESTIONS = ev.questions;
 
   const active = session.state === "tension";
   const tphase = session.tphase || "ask";
@@ -60,14 +62,25 @@ export function Session() {
   // once locked, freeze the water at the chosen side (no more movement)
   const shownTilt = locked ? (lockedSide === 0 ? -0.9 : 0.9) : tilt.tilt;
 
-  // twin (revealed when host moves to 'twin')
+  // twin (revealed when the host finishes + matches the room).
+  // The host's pairing wins; we only fall back to a local match if the
+  // host hasn't run the matcher for this specimen.
   const [match, setMatch] = useState(null);
   useEffect(() => {
     if (session.state !== "twin" || !me) return;
+    let alive = true;
+    if (me.twin?.id) {
+      const live = room.find((p) => p.id === me.twin.id);
+      const twin = { ...me.twin, ...live };
+      setMatch({ match: twin, reason: me.twin.reason || "", shared: me.twin.shared, total: me.twin.total });
+      describeTwin(me, twin, me.twin.shared, me.twin.total).then((r) => {
+        if (alive && r.reason) setMatch((m) => ({ ...m, reason: r.reason }));
+      });
+      return () => { alive = false; };
+    }
     const pool = room.filter((p) => p.id !== me.id && p.answers?.length);
     const local = findTwin(me.answers || [], pool);
     setMatch({ match: local.twin, reason: "", shared: local.shared, total: local.total });
-    let alive = true;
     matchmake(me, pool).then((r) => { if (alive && r.match) setMatch(r); });
     return () => { alive = false; };
   }, [session.state, me, room]);
@@ -80,7 +93,7 @@ export function Session() {
       <WaitingRoom
         me={me}
         count={room.length}
-        tag="EVENT 01 · WAITING ROOM"
+        tag={ev.waitingTag}
         title={"Creative\nTension"}
         sub="The host will start the Creative Tension for everyone at once. Keep your phone in hand."
       />
@@ -89,7 +102,7 @@ export function Session() {
 
   // ---- host-driven tension ----
   if (session.state === "tension") {
-    const question = QUESTIONS[q];
+    const question = QUESTIONS[Math.min(q, QUESTIONS.length - 1)];
     const gate = tilt.needsPermission && tilt.permission !== "granted";
     return (
       <motion.div className="screen screen--space session-tension" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>

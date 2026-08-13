@@ -519,6 +519,8 @@
 }
 .menu-extra .btn { flex: 1; color: var(--white); border-color: rgba(247,245,243,0.4); }
 .menu-extra a.btn { text-decoration: none; }
+.menu-extra:empty { display: none; }
+.menu-foot-row { display: flex; gap: 14px; justify-content: space-between; flex-wrap: wrap; }
 
 /* ---- artists (one column poster cards) ---- */
 .artist-list {
@@ -735,6 +737,8 @@
   font-size: clamp(30px, 9vw, 46px); text-transform: uppercase;
   letter-spacing: -0.02em; color: var(--white); line-height: 1; margin-top: 8px;
 }
+.water__axis { display: block; color: var(--aqua); font-size: 10px; letter-spacing: 0.1em; margin-top: 6px; }
+.water__sub { color: rgba(247,245,243,0.72); font-size: 14px; line-height: 1.4; margin-top: 8px; }
 .water__options { display: flex; justify-content: space-between; align-items: flex-start; margin: 20px 0 10px; gap: 10px; }
 .water__opt {
   font-family: var(--sans); font-weight: 300; font-size: clamp(20px, 6.5vw, 32px);
@@ -886,6 +890,21 @@
 .mon-card h2 { font-family: var(--sans); font-weight: 300; font-size: 30px; text-transform: uppercase; letter-spacing: -0.02em; line-height: 1; }
 .mon-card p { font-size: 13px; line-height: 1.45; opacity: 0.78; flex: 1; }
 .mon-card__meta { font-size: 10px; color: var(--aqua); }
+/* a second event, visibly its own thing */
+.mon-card--alt { border-color: rgba(229,36,28,0.55); background: rgba(24,10,10,0.45); }
+.mon-card--alt:hover { border-color: var(--red); }
+.mon-card--alt .mon-card__no, .mon-card--alt .mon-card__meta { color: var(--red); }
+.mon-card--alt b { color: var(--white); }
+
+/* host note under the stage (event code + reveal switch) */
+.mon-note {
+  display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;
+  padding: 10px 0 2px; color: rgba(247,245,243,0.7); font-size: 11px;
+}
+.mon-note b { color: var(--aqua); letter-spacing: 0.1em; }
+/* matches listed under the stage — never push the controls off-screen */
+.ex-stage .monitor__cards { max-height: 32vh; flex: none; }
+.monitor__event { margin-left: 10px; color: rgba(247,245,243,0.55); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
 
 .monitor__cards { overflow-y: auto; }
 .mon-card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
@@ -910,6 +929,14 @@
   font-size: clamp(30px, 5vw, 56px); text-transform: uppercase; letter-spacing: -0.02em; line-height: 1; margin-top: 6px;
 }
 .ex-question__opts { display: flex; justify-content: space-between; max-width: 620px; margin: 12px auto 0; color: var(--red); font-size: 13px; }
+.ex-question__axis {
+  display: block; color: var(--aqua); font-size: 13px; letter-spacing: 0.14em;
+  margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ex-question__sub {
+  max-width: 720px; margin: 8px auto 0; color: rgba(247,245,243,0.7);
+  font-size: 15px; line-height: 1.4;
+}
 .ex-count { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
 .ex-count__num { font-family: var(--sans); font-weight: 200; font-size: 26vh; line-height: 1; color: var(--white); }
 .ex-result { text-align: center; color: var(--aqua); padding: 10px; }

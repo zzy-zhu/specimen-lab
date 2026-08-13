@@ -38,6 +38,28 @@ Passcode-gated (`specimen.lab2026`) live dashboard to **project in the room**:
 the Wood Wide Web, live tension results, and AI idea synthesis. The
 mineral-space backdrop listens to the room's ambient sound and reacts.
 
+## Events (sealed rooms)
+
+`src/data/events.js` is the registry — one entry per event. Each event has its
+own access code, its own RTDB node (`rooms/<room>`), its own questions and its
+own local identity keys, so **nothing crosses between events**: an OpenTab
+attendee never sees LA's specimens, results, artists or Open Lab.
+
+| Event | Code | Room | Contains |
+|---|---|---|---|
+| Specimen.lab LA | `specimenla` | `rooms/live` | Creative Tension (4 Qs) + Open Lab + artists |
+| OpenTab | `opentab` | `rooms/opentab` | Creative Tension only (3 Qs) + Zoey's IG |
+
+The code you type at `/enter` picks the event (`/enter?code=opentab` deep-links
+for a QR; `/enter?new=1` re-opens the gate on a device that already unlocked
+one). The monitor has an **OpenTab Creative Tension** tab that drives the other
+room without changing which event that browser belongs to, and a lock switch
+that reveals the Specimen.lab archive to the OpenTab room when the host wants.
+
+Adding a new event = one entry in `EVENTS` (plus its questions in
+`src/data/lab.js`). New rooms need `rooms/<room>` to be writable in the
+Firebase Realtime Database rules.
+
 ## Run it
 
 ```bash

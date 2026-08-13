@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { WoodWideWeb } from "../components/WoodWideWeb";
@@ -6,11 +6,12 @@ import { LiveSwarm } from "../components/LiveSwarm";
 import { NameCard } from "../components/NameCard";
 import { Wordmark, FuturePixelMark } from "../components/Wordmark";
 import { useScene, ListenButton } from "../lib/atmosphere";
-import { useRoom, useSession } from "../lib/hooks";
-import { QUESTIONS, findTwin } from "../data/lab";
+import { useEvent, useRoom, useRoomCount, useSession } from "../lib/hooks";
+import { findTwin, pairRoom, twinRecord } from "../data/lab";
+import { EVENTS } from "../data/events";
 import { ARTISTS } from "../data/artists";
 import { summarizeIdeas } from "../lib/ai";
-import { resetRoom, setSession } from "../lib/store";
+import { resetRoom, setSession, setActiveEvent, patchSpecimen, getEventId } from "../lib/store";
 
 const PASSCODE = "fph2026";
 const KEY = "specimen.lab.monitor.ok";
@@ -51,10 +52,12 @@ function Dashboard() {
   useScene({ tone: "space", accent: "aqua" });
   const room = useRoom();
   const session = useSession();
-  const [view, setView] = useState("menu"); // menu | users | tension | lab | labbie | matches
+  const ev = useEvent(); // which event the dashboard is currently driving
+  const [view, setView] = useState("menu"); // menu | users | tension | lab | labbie | matches | opentab
   const [ai, setAi] = useState(null);
   const [mq, setMq] = useState("");
 
+  const QUESTIONS = ev.questions;
   const st = session.state;
   const q = session.q ?? 0;
   const answeredQ = room.filter((p) => p.answers?.[q] != null).length;
@@ -62,6 +65,21 @@ function Dashboard() {
   const shakeCount = room.filter((p) => p.shake != null).length;
   const withIdeas = useMemo(() => room.filter((p) => (p.idea || "").trim()), [room]);
   const tphase = session.tphase || "ask";
+
+  // headcount of the other event, read without leaving this one
+  const opentabCount = useRoomCount(EVENTS.opentab.id);
+
+  /* the OpenTab tab drives a different RTDB room. Switching is not
+     persisted — peeking here never turns this browser into an attendee,
+     and leaving the monitor puts this device back on its own event. */
+  const homeEvent = useRef(getEventId());
+  const openEvent = (id, next) => { setActiveEvent(id, { persist: false }); setView(next); };
+  const goMenu = () => openEvent(EVENTS.la.id, "menu");
+  useEffect(() => {
+    setActiveEvent(EVENTS.la.id, { persist: false }); // the dashboard opens on the LA room
+    const home = homeEvent.current;
+    return () => setActiveEvent(home, { persist: false });
+  }, []);
 
   // 3-2-1 countdown at the start of the tension game
   const [count, setCount] = useState(3);
@@ -82,9 +100,23 @@ function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, withIdeas.length]);
 
-  const clearAll = () => { if (window.confirm("Clear ALL specimens + data from the room? This cannot be undone.")) resetRoom(); };
+  const clearAll = () => {
+    if (window.confirm(`Clear ALL specimens + data from ${ev.name}? This cannot be undone.`)) resetRoom();
+  };
 
-  // matches dashboard rows (prefer stored twin, else compute live)
+  /* ---- the host finishes: pair the whole room, then reveal ----
+     Pairs are mutual and written onto each specimen, so phones and the
+     matches table all show the same answer. */
+  const finishAndMatch = () => {
+    const pairs = pairRoom(room);
+    pairs.forEach(({ a, b, shared, total, oneWay }) => {
+      patchSpecimen(a.id, { twin: twinRecord(b, shared, total) });
+      if (!oneWay) patchSpecimen(b.id, { twin: twinRecord(a, shared, total) });
+    });
+    setSession({ state: "twin", tphase: "result", matchedAt: Date.now() });
+  };
+
+  // matches dashboard rows (prefer the stored pairing, else compute live)
   const answered = useMemo(() => room.filter((p) => p.answers?.length), [room]);
   const matchRows = useMemo(() => {
     return answered.map((p) => {
@@ -95,20 +127,21 @@ function Dashboard() {
         idea: p.idea, shake: p.shake,
       };
     }).sort((a, b) => a.name.localeCompare(b.name));
-  }, [answered]);
+  }, [answered, QUESTIONS.length]);
   const filteredRows = matchRows.filter((r) => !mq || (r.name + r.twinName).toLowerCase().includes(mq.toLowerCase()));
 
   // ---- header (shared) ----
   const Header = () => (
     <header className="monitor__head">
       <div>
-        <button className="wordmark-btn" onClick={() => setView("menu")}><Wordmark size={22} stacked color="var(--white)" /></button>
+        <button className="wordmark-btn" onClick={goMenu}><Wordmark size={22} stacked color="var(--white)" /></button>
         <span className="mono monitor__live">● LIVE{view !== "menu" ? " · " + view.toUpperCase() : ""}</span>
+        {view !== "menu" && <span className="mono monitor__event">{ev.name}</span>}
       </div>
       <div className="monitor__head-right">
         <ListenButton />
         <span className="mono monitor__stat"><b>{room.length}</b> specimens</span>
-        {view !== "menu" && <button className="backchip mono" onClick={() => setView("menu")}>↩ monitor menu</button>}
+        {view !== "menu" && <button className="backchip mono" onClick={goMenu}>↩ monitor menu</button>}
       </div>
     </header>
   );
@@ -149,6 +182,12 @@ function Dashboard() {
             <p>Tonight's featured artists & hosts — the lineup on the big screen.</p>
             <span className="mon-card__meta mono">{ARTISTS.length} artists</span>
           </button>
+          <button className="mon-card mon-card--alt" onClick={() => openEvent(EVENTS.opentab.id, "opentab")}>
+            <span className="mon-card__no mono">⊞</span>
+            <h2>OpenTab Creative Tension</h2>
+            <p>A separate room with its own code (<b>{EVENTS.opentab.code}</b>) and its own {EVENTS.opentab.questions.length} tensions. Nothing is shared with the LA event.</p>
+            <span className="mon-card__meta mono">{opentabCount} in the OpenTab room</span>
+          </button>
         </div>
       )}
 
@@ -158,23 +197,7 @@ function Dashboard() {
             <span className="panel-tag mono">CREATIVE TWINS — {matchRows.length} MATCHED</span>
             <input className="field field--dark matches-search" placeholder="search a name…" value={mq} onChange={(e) => setMq(e.target.value)} />
           </div>
-          {filteredRows.length === 0 ? (
-            <Empty text="No matches yet — nobody has finished Creative Tension." />
-          ) : (
-            <table className="matches-table">
-              <thead><tr><th>Specimen</th><th></th><th>Creative twin</th><th>Aligned</th></tr></thead>
-              <tbody>
-                {filteredRows.map((r) => (
-                  <tr key={r.id}>
-                    <td className="matches-name">{r.name}</td>
-                    <td className="matches-arrow">⇄</td>
-                    <td className="matches-twin">{r.twinName}</td>
-                    <td className="matches-score mono">{r.shared}/{r.total}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+          <MatchesTable rows={filteredRows} />
         </section>
       )}
 
@@ -218,48 +241,35 @@ function Dashboard() {
         </div>
       )}
 
-      {view === "tension" && (
-        <div className="ex-stage">
-          {/* big question on top */}
-          {st === "tension" && tphase !== "count" && (
-            <div className="ex-question">
-              <span className="ex-question__glyph">{QUESTIONS[q].glyph}</span>
-              <h1 className="ex-question__prompt">{QUESTIONS[q].prompt}</h1>
-              <div className="ex-question__opts mono"><span>◀ {QUESTIONS[q].left}</span><span>{QUESTIONS[q].right} ▶</span></div>
-            </div>
-          )}
-
-          {/* body */}
-          <section className="monitor__swarm monitor__swarm--full">
-            {st === "tension" && tphase === "count" ? (
-              <div className="ex-count"><span className="ex-count__num">{count}</span><span className="mono">get ready…</span></div>
-            ) : room.length ? (
-              <LiveSwarm people={room} lockedQ={st === "tension" && tphase !== "count" ? q : null} />
-            ) : (
-              <Empty text="Waiting for specimens to join…" />
-            )}
-            {st === "tension" && tphase === "result" && (
-              <div className="ex-result mono">{answeredQ}/{room.length} locked in · results frozen</div>
-            )}
-          </section>
-
-          {/* centered controls */}
-          <div className="mon-controls">
-            <span className="mon-count mono">◉ {room.length} in the room</span>
-            {st !== "tension" && (
-              <button className="host-btn go big" onClick={() => setSession({ state: "tension", q: 0, tphase: "count" })}>▶ Start Creative Tension</button>
-            )}
-            {st === "tension" && tphase === "ask" && (
-              <button className="host-btn go big" onClick={() => setSession({ tphase: "result" })}>■ End question</button>
-            )}
-            {st === "tension" && tphase === "result" && (
-              <button className="host-btn go big" onClick={() => (q + 1 >= QUESTIONS.length ? setSession({ state: "twin" }) : setSession({ q: q + 1, tphase: "ask" }))}>
-                {q + 1 >= QUESTIONS.length ? "Reveal twins ▶" : "Next question ▶"}
-              </button>
-            )}
-            {st === "tension" && <button className="host-btn" onClick={() => setSession({ state: "lobby", q: 0, tphase: "ask" })}>↺ Reset</button>}
-          </div>
-        </div>
+      {(view === "tension" || view === "opentab") && (
+        <TensionStage
+          questions={QUESTIONS}
+          room={room}
+          st={st}
+          q={q}
+          tphase={tphase}
+          count={count}
+          answeredQ={answeredQ}
+          onFinish={finishAndMatch}
+          extra={
+            view === "opentab" ? (
+              <div className="mon-note">
+                <span className="mono">access code · <b>{ev.code}</b> — this room is separate from Specimen.lab LA</span>
+                <button className="host-btn" onClick={() => setSession({ reveal: !session.reveal })}>
+                  {session.reveal ? "🔓 archive visible — hide it" : "🔒 reveal the Specimen.lab archive"}
+                </button>
+              </div>
+            ) : null
+          }
+          after={
+            st !== "tension" && matchRows.length ? (
+              <section className="monitor__cards" style={{ paddingTop: 6 }}>
+                <span className="panel-tag mono">MATCHED PAIRS — {matchRows.length}</span>
+                <MatchesTable rows={matchRows} />
+              </section>
+            ) : null
+          }
+        />
       )}
 
       {view === "lab" && (
@@ -305,11 +315,99 @@ function Dashboard() {
       <footer className="monitor__foot">
         <FuturePixelMark color="var(--white)" />
         <div className="monitor__foot-actions">
-          <button className="host-btn" onClick={clearAll}>⌫ Clear all users & data</button>
+          <button className="host-btn" onClick={clearAll}>⌫ Clear {ev.name} users & data</button>
           <button className="linklike mono dim" onClick={() => nav("/")}>exit monitor</button>
         </div>
       </footer>
     </div>
+  );
+}
+
+/* ---------- the guided tension stage (shared by both events) ---------- */
+function TensionStage({ questions, room, st, q, tphase, count, answeredQ, onFinish, extra, after }) {
+  const question = questions[Math.min(q, questions.length - 1)];
+  const last = q + 1 >= questions.length;
+  return (
+    <div className="ex-stage">
+      {/* big question on top */}
+      {st === "tension" && tphase !== "count" && (
+        <div className="ex-question">
+          <span className="ex-question__glyph">{question.glyph}</span>
+          {question.axis && <span className="ex-question__axis mono">{question.axis}</span>}
+          {question.sub && <p className="ex-question__sub">{question.sub}</p>}
+          <h1 className="ex-question__prompt">{question.prompt}</h1>
+          <div className="ex-question__opts mono"><span>◀ {question.left}</span><span>{question.right} ▶</span></div>
+        </div>
+      )}
+      {st === "twin" && (
+        <div className="ex-question">
+          <h1 className="ex-question__prompt">Find your twin</h1>
+          <div className="ex-question__opts mono"><span>the room is matched — everyone's twin is on their phone</span></div>
+        </div>
+      )}
+
+      {/* body */}
+      <section className="monitor__swarm monitor__swarm--full">
+        {st === "tension" && tphase === "count" ? (
+          <div className="ex-count"><span className="ex-count__num">{count}</span><span className="mono">get ready…</span></div>
+        ) : room.length ? (
+          <LiveSwarm people={room} lockedQ={st === "tension" && tphase !== "count" ? q : null} />
+        ) : (
+          <Empty text="Waiting for specimens to join…" />
+        )}
+        {st === "tension" && tphase === "result" && (
+          <div className="ex-result mono">{answeredQ}/{room.length} locked in · results frozen</div>
+        )}
+      </section>
+
+      {/* centered controls */}
+      <div className="mon-controls">
+        <span className="mon-count mono">◉ {room.length} in the room</span>
+        {st !== "tension" && (
+          <button className="host-btn go big" onClick={() => setSession({ state: "tension", q: 0, tphase: "count" })}>
+            {st === "twin" ? "↻ Run it again" : "▶ Start Creative Tension"}
+          </button>
+        )}
+        {st === "tension" && tphase === "ask" && (
+          <button className="host-btn go big" onClick={() => setSession({ tphase: "result" })}>■ End question</button>
+        )}
+        {st === "tension" && tphase === "result" && (
+          <button className="host-btn go big" onClick={() => (last ? onFinish() : setSession({ q: q + 1, tphase: "ask" }))}>
+            {last ? "✦ Finish → match the room" : "Next question ▶"}
+          </button>
+        )}
+        {/* the host can end the whole thing at any point, not just on the last question */}
+        {st === "tension" && tphase !== "count" && !(last && tphase === "result") && (
+          <button className="host-btn" onClick={onFinish}>✦ Finish early & match</button>
+        )}
+        {st === "twin" && <button className="host-btn" onClick={onFinish}>↻ Re-run matching</button>}
+        {(st === "tension" || st === "twin") && (
+          <button className="host-btn" onClick={() => setSession({ state: "lobby", q: 0, tphase: "ask" })}>↺ Reset</button>
+        )}
+      </div>
+
+      {extra}
+      {after}
+    </div>
+  );
+}
+
+function MatchesTable({ rows }) {
+  if (!rows.length) return <Empty text="No matches yet — nobody has finished Creative Tension." />;
+  return (
+    <table className="matches-table">
+      <thead><tr><th>Specimen</th><th></th><th>Creative twin</th><th>Aligned</th></tr></thead>
+      <tbody>
+        {rows.map((r) => (
+          <tr key={r.id}>
+            <td className="matches-name">{r.name}</td>
+            <td className="matches-arrow">⇄</td>
+            <td className="matches-twin">{r.twinName}</td>
+            <td className="matches-score mono">{r.shared}/{r.total}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 

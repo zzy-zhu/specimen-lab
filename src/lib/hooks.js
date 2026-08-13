@@ -8,6 +8,25 @@ export function useRoom() {
   return all;
 }
 
+/** the active event's config (questions, parts, links) — see data/events.js */
+export function useEvent() {
+  const [ev, setEv] = useState(() => store.getActiveEvent());
+  useEffect(() => store.subscribe(() => setEv(store.getActiveEvent())), []);
+  return ev;
+}
+
+/** the active event's tension questions */
+export function useQuestions() {
+  return useEvent().questions;
+}
+
+/** headcount of another event's room, without leaving this one (monitor menu) */
+export function useRoomCount(eventId) {
+  const [n, setN] = useState(0);
+  useEffect(() => store.subscribeRoomCount(eventId, setN), [eventId]);
+  return n;
+}
+
 /** live host-controlled session state */
 export function useSession() {
   const [session, setSession] = useState(() => store.getSession());

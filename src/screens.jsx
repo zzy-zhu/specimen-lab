@@ -9,7 +9,7 @@ import { WaveChart } from "./components/WaveChart";
 import { TiltMeter } from "./components/TiltMeter";
 import { useTilt } from "./hooks/useTilt";
 import { useShake } from "./hooks/useShake";
-import { QUESTIONS } from "./data/lab";
+import { useQuestions } from "./lib/hooks";
 import { downscaleImage } from "./lib/image";
 
 /* shared page-transition wrapper */
@@ -107,6 +107,7 @@ export function CreateSpecimen({ onCreate, onBack, existing, cta = "Enter →" }
 /* TENSION — 4 tilt questions with live results              */
 /* ========================================================= */
 export function Tension({ pool, onDone, onBack }) {
+  const QUESTIONS = useQuestions();
   const [idx, setIdx] = useState(0);
   const [phase, setPhase] = useState("answering");
   const [answers, setAnswers] = useState([]);

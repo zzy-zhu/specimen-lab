@@ -1,32 +1,42 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Wordmark } from "../components/Wordmark";
 import { useScene } from "../lib/atmosphere";
-import { useEffect } from "react";
-import { DAY_CODE } from "../data/lab";
-import { unlockSession, getMe, isSessionUnlocked } from "../lib/store";
+import { eventByCode } from "../data/events";
+import { unlockSession, getMe, isSessionUnlocked, setActiveEvent } from "../lib/store";
 
-/* Code-of-the-day gate. Arrives out of the black cover transition.
-   Returning attendees can log in their saved ID instead. */
+/* Access gate. Each event has its own code — the code decides which room
+   you join, and rooms never share data. Returning attendees can log in
+   their saved ID instead. `?code=opentab` deep-links straight in (QR),
+   `?new=1` forces the gate even if this device already unlocked one. */
 export function Enter() {
   useScene({ tone: "space", accent: "aqua" });
   const nav = useNavigate();
+  const [params] = useSearchParams();
   const [code, setCode] = useState("");
   const [err, setErr] = useState(false);
 
-  // already unlocked (cookie) → skip the code entirely
+  const enter = (ev) => {
+    setActiveEvent(ev.id);
+    unlockSession();
+    nav(getMe() ? "/menu" : "/create", { replace: true }); // create profile first, then menu
+  };
+
   useEffect(() => {
-    if (isSessionUnlocked()) nav(getMe() ? "/menu" : "/create", { replace: true });
-  }, [nav]);
+    const deep = eventByCode(params.get("code"));
+    if (deep) { enter(deep); return; }
+    // already unlocked (cookie) → skip the code entirely, unless forced
+    if (params.get("new") == null && isSessionUnlocked()) {
+      nav(getMe() ? "/menu" : "/create", { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nav, params]);
 
   const submit = () => {
-    if (code.trim().toLowerCase() === DAY_CODE) {
-      unlockSession();
-      nav(getMe() ? "/menu" : "/create"); // create profile first, then menu
-    } else {
-      setErr(true);
-    }
+    const ev = eventByCode(code);
+    if (ev) enter(ev);
+    else setErr(true);
   };
 
   return (

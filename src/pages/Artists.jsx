@@ -1,9 +1,11 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Wordmark, CornerBrand } from "../components/Wordmark";
 import { ScanToPhone } from "../components/ScanToPhone";
 import { useScene } from "../lib/atmosphere";
 import { useIsDesktop } from "../hooks/useIsDesktop";
+import { useEvent, useSession } from "../lib/hooks";
 import { ARTISTS, LUMA } from "../data/artists";
 
 /* Today's artists — one column of the actual poster images on phone
@@ -13,6 +15,13 @@ export function Artists() {
   useScene({ tone: "space", accent: "red" });
   const nav = useNavigate();
   const desktop = useIsDesktop();
+  const ev = useEvent();
+  const session = useSession();
+
+  // events that aren't the LA night only see this once the host reveals it
+  const allowed = ev.artists || !!session.reveal;
+  useEffect(() => { if (!allowed) nav("/menu", { replace: true }); }, [allowed, nav]);
+  if (!allowed) return null;
 
   if (desktop) {
     return (

@@ -5,7 +5,7 @@ import { Finale } from "../components/Finale";
 import { WaitingRoom } from "../components/WaitingRoom";
 import { ShakeResult } from "../components/ShakeResult";
 import { useScene } from "../lib/atmosphere";
-import { useMe, useRoom, useSession } from "../lib/hooks";
+import { useEvent, useMe, useRoom, useSession } from "../lib/hooks";
 import { usePresence } from "../hooks/usePresence";
 import { isSessionUnlocked } from "../lib/store";
 
@@ -16,6 +16,7 @@ export function LabFlow() {
   const { me, patch } = useMe();
   const room = useRoom();
   const session = useSession();
+  const ev = useEvent();
   const st = session.state;
 
   useScene(st === "web" ? { tone: "space", accent: "red" } : { tone: "space", accent: "aqua" });
@@ -25,16 +26,17 @@ export function LabFlow() {
   const [shakeDone, setShakeDone] = useState(false);
 
   useEffect(() => {
-    if (!isSessionUnlocked()) nav("/enter", { replace: true });
+    if (!ev.parts.lab) nav("/menu", { replace: true }); // this event doesn't run the Open Lab
+    else if (!isSessionUnlocked()) nav("/enter", { replace: true });
     else if (!me) nav("/create", { replace: true });
-  }, [me, nav]);
+  }, [ev, me, nav]);
 
   // reset local "submitted" flags when the host moves between steps
   useEffect(() => { if (st !== "idea") setIdeaDone(false); }, [st]);
   useEffect(() => { if (st !== "shake") setShakeDone(false); }, [st]);
 
   const everyone = useMemo(() => room, [room]);
-  if (!me) return null;
+  if (!me || !ev.parts.lab) return null;
 
   // capture idea (host-held)
   if (st === "idea") {

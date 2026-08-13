@@ -39,9 +39,41 @@ export const QUESTIONS = [
   },
 ];
 
+/* ---- OpenTab: three tensions, instinct only ---- */
+export const OPENTAB_QUESTIONS = [
+  {
+    id: "control-chaos",
+    glyph: "◐",
+    axis: "CONTROL ←————————→ CHAOS",
+    sub: "Don't think too hard. Just instinct. In your creative life right now —",
+    prompt: "More control, or more chaos?",
+    left: "Control",
+    right: "Chaos",
+  },
+  {
+    id: "ambition-play",
+    glyph: "◑",
+    axis: "AMBITION ←————————→ PLAY",
+    sub: "What do you need more of right now?",
+    prompt: "Ambition, or play?",
+    left: "Ambition",
+    right: "Play",
+  },
+  {
+    id: "finish-wander",
+    glyph: "◒",
+    axis: "FINISH ←————————→ WANDER",
+    sub: "Do you need to finish something — or permission to wander a little longer?",
+    prompt: "Finish, or wander?",
+    left: "Finish",
+    right: "Wander",
+  },
+];
+
 /* answers are encoded 0 = left, 1 = right */
 
-/* code of the day — organizer rotates this per session to gate the menu */
+/* code of the day — organizer rotates this per session to gate the menu.
+   Kept for back-compat; the live list of codes is in data/events.js */
 export const DAY_CODE = "specimenla";
 
 /* ---- seed participant pool (stands in for a pre-populated room) ---- */
@@ -178,6 +210,76 @@ export function findTwin(myAnswers, pool = PARTICIPANTS) {
     }
   });
   return { twin: best, shared: bestScore, total: myAnswers.length };
+}
+
+/* ---- host-run matching: pair the whole room, two by two ----
+   Called from the monitor when the host finishes Creative Tension.
+   Greedy on the strongest agreement first, so pairs are mutual;
+   the odd one out gets a one-way match to their closest instinct. */
+function agreement(a, b) {
+  let shared = 0;
+  let total = 0;
+  (a.answers || []).forEach((v, i) => {
+    const w = b.answers?.[i];
+    if (v == null || w == null) return;
+    total++;
+    if (v === w) shared++;
+  });
+  return { shared, total };
+}
+
+export function pairRoom(people) {
+  const list = people.filter((p) => p?.id && p.answers?.length);
+  const cands = [];
+  for (let i = 0; i < list.length; i++) {
+    for (let j = i + 1; j < list.length; j++) {
+      const { shared, total } = agreement(list[i], list[j]);
+      cands.push({ a: list[i], b: list[j], shared, total });
+    }
+  }
+  // strongest agreement first; deterministic tie-break so two monitors agree
+  cands.sort(
+    (x, y) =>
+      y.shared - x.shared ||
+      y.total - x.total ||
+      (x.a.id + x.b.id).localeCompare(y.a.id + y.b.id)
+  );
+
+  const taken = new Set();
+  const pairs = [];
+  cands.forEach((c) => {
+    if (taken.has(c.a.id) || taken.has(c.b.id)) return;
+    taken.add(c.a.id);
+    taken.add(c.b.id);
+    pairs.push(c);
+  });
+
+  // odd person out → their closest instinct, one-way (that person keeps their pair)
+  list
+    .filter((p) => !taken.has(p.id))
+    .forEach((p) => {
+      let best = null;
+      list.forEach((o) => {
+        if (o.id === p.id) return;
+        const { shared, total } = agreement(p, o);
+        if (!best || shared > best.shared) best = { a: p, b: o, shared, total, oneWay: true };
+      });
+      if (best) pairs.push(best);
+    });
+
+  return pairs;
+}
+
+/** the slim record we store on a specimen once the host has matched the room */
+export function twinRecord(person, shared, total) {
+  return {
+    id: person.id,
+    name: person.name || "—",
+    handle: person.handle || "",
+    idea: person.idea || "",
+    shared,
+    total,
+  };
 }
 
 /** nearest + farthest shake signatures */

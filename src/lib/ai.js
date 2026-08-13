@@ -138,6 +138,21 @@ ${ideas}`;
 }
 
 /* ---- open-lab match: closest shaker, summarized by ideas + shake ---- */
+/* ---- a line about a pair the HOST already matched (no re-picking) ---- */
+export async function describeTwin(me, twin, shared, total) {
+  if (!twin) return { reason: "" };
+  const local = `You and ${twin.name} leaned the same way on ${shared}/${total} tensions — the same current runs through you both.`;
+  if (!API_KEY) return { reason: local };
+  try {
+    const prompt = `Two people at Specimen.lab were paired by their instincts — they answered the same either/or "creative tension" questions and agreed on ${shared} of ${total}. Write ONE short, vivid, slightly mystical sentence (name ${twin.name}) about why they resonate. Return just the sentence.`;
+    const text = await callClaude(prompt, 160);
+    return { reason: text.trim() || local, source: "claude" };
+  } catch (e) {
+    console.warn("describeTwin fallback:", e.message);
+    return { reason: local };
+  }
+}
+
 export async function summarizeMatch(me, other) {
   if (!other) return { reason: "" };
   const local = `You and ${other.name} share a rhythm${me.tech && other.tech ? ` and a pull toward ${other.tech}` : ""}. Go compare notes.`;

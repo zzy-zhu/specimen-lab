@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Wordmark, FuturePixelMark } from "../components/Wordmark";
 import { useScene } from "../lib/atmosphere";
+import { useEvent } from "../lib/hooks";
 import { INSTAGRAM, INSTAGRAM_HANDLE, ANIMA_IG, ANIMA_HANDLE } from "../data/artists";
 
 function IgIcon() {
@@ -16,6 +17,7 @@ function IgIcon() {
 
 export function About() {
   const nav = useNavigate();
+  const ev = useEvent();
   useScene({ tone: "space", accent: "red" });
 
   return (
@@ -40,16 +42,24 @@ export function About() {
           tags, no titles — just you, your instincts, and the ideas you're still chasing.
         </p>
         <p className="lede" style={{ color: "rgba(247,245,243,0.7)", marginTop: 12 }}>
-          Two quick phone rituals turn a room of strangers into a network.
+          {ev.parts.lab
+            ? "Two quick phone rituals turn a room of strangers into a network."
+            : "A few quick phone rituals turn a room of strangers into a network."}
         </p>
 
         <div className="ig-row">
           <a className="ig-follow" href={INSTAGRAM} target="_blank" rel="noreferrer">
             <IgIcon /> FuturePIXEL · {INSTAGRAM_HANDLE}
           </a>
-          <a className="ig-follow ig-follow--alt" href={ANIMA_IG} target="_blank" rel="noreferrer">
-            <IgIcon /> collaborator · {ANIMA_HANDLE}
-          </a>
+          {ev.ig ? (
+            <a className="ig-follow ig-follow--alt" href={ev.ig.url} target="_blank" rel="noreferrer">
+              <IgIcon /> {ev.ig.label} · {ev.ig.handle}
+            </a>
+          ) : (
+            <a className="ig-follow ig-follow--alt" href={ANIMA_IG} target="_blank" rel="noreferrer">
+              <IgIcon /> collaborator · {ANIMA_HANDLE}
+            </a>
+          )}
         </div>
       </div>
 

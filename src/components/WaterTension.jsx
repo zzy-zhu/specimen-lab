@@ -2,7 +2,9 @@
    WaterTension — hold your phone like a glass of water.
    Tilt and the water pools to that side; the side it pools to is
    your answer. Big, minimal, physical.
-   `tilt` is normalized [-1,1]. `q` = { glyph, prompt, left, right }.
+   `tilt` is normalized [-1,1].
+   `q` = { glyph, prompt, left, right, axis?, sub? } — axis/sub are
+   optional framing lines shown above the prompt.
    ============================================================ */
 export function WaterTension({ q, tilt, locked }) {
   const live = tilt < -0.12 ? "left" : tilt > 0.12 ? "right" : "none";
@@ -15,6 +17,8 @@ export function WaterTension({ q, tilt, locked }) {
     <div className="water">
       <div className="water__q">
         <span className="water__glyph">{q.glyph}</span>
+        {q.axis && <span className="water__axis mono">{q.axis}</span>}
+        {q.sub && <p className="water__sub">{q.sub}</p>}
         <h1 className="water__prompt">{q.prompt}</h1>
       </div>
 

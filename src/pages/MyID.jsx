@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { NameCard } from "../components/NameCard";
 import { Wordmark } from "../components/Wordmark";
 import { useScene } from "../lib/atmosphere";
-import { useMe, useRoom } from "../lib/hooks";
+import { useEvent, useMe, useRoom } from "../lib/hooks";
 import { unlockSession, deleteSpecimen } from "../lib/store";
 import { resetIntro } from "../lib/prefs";
 
@@ -13,6 +13,7 @@ export function MyID() {
   const nav = useNavigate();
   const { me, login, logout } = useMe();
   const room = useRoom();
+  const ev = useEvent();
   const [handle, setHandle] = useState("");
   const [passcode, setPasscode] = useState("");
   const [err, setErr] = useState("");
@@ -86,12 +87,14 @@ export function MyID() {
 
       <div className="id-progress">
         <span className={`id-pill mono ${me.part1Done ? "done" : ""}`}>{me.part1Done ? "✓" : "○"} Part 01 · Tension</span>
-        <span className={`id-pill mono ${me.part2Done ? "done" : ""}`}>{me.part2Done ? "✓" : "○"} Part 02 · Open Lab</span>
+        {ev.parts.lab && (
+          <span className={`id-pill mono ${me.part2Done ? "done" : ""}`}>{me.part2Done ? "✓" : "○"} Part 02 · Open Lab</span>
+        )}
       </div>
 
       <div className="id-btns">
         <button className="btn btn-ghost" onClick={() => nav("/create")}>✎ Edit profile</button>
-        <button className="btn btn-ghost" onClick={() => nav("/map")}>◍ Connection map</button>
+        {ev.parts.lab && <button className="btn btn-ghost" onClick={() => nav("/map")}>◍ Connection map</button>}
       </div>
       <button className="id-link mono" onClick={copyLink}>
         {copied ? "✓ link copied" : `◇ share your profile — /p/${me.handle}`}
