@@ -145,7 +145,7 @@ export function getById(id) {
 
 /* ---- writes ---- */
 /* simplified: just a name + selfie. id is generated (device-persistent). */
-export function createSpecimen({ name, image, passcode }) {
+export function createSpecimen({ name, image, passcode, dream }) {
   const prevId = localStorage.getItem(ME_KEY());
   const existing = prevId && cache.find((p) => p.id === prevId);
   const slug = (name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "specimen";
@@ -160,6 +160,7 @@ export function createSpecimen({ name, image, passcode }) {
     role: "specimen",
     color: existing?.color || PALETTE[cache.length % PALETTE.length],
     answers: existing?.answers ?? [],
+    dream: dream ?? existing?.dream ?? "", // what they want to make, unasked
     shake: existing?.shake ?? null,
     idea: existing?.idea ?? "",
     tech: existing?.tech ?? "",

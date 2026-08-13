@@ -277,6 +277,7 @@ export function twinRecord(person, shared, total) {
     name: person.name || "—",
     handle: person.handle || "",
     idea: person.idea || "",
+    dream: person.dream || "", // paired on instinct, but you see what they want to make
     shared,
     total,
   };

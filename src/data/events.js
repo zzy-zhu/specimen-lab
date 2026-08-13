@@ -30,6 +30,7 @@ export const EVENTS = {
     artists: true,
     luma: LUMA,
     ig: null,
+    dream: null, // LA captures ideas in the Open Lab instead
   },
 
   /* ---- OpenTab — Creative Tension only ---- */
@@ -50,6 +51,15 @@ export const EVENTS = {
     artists: false,
     luma: null,
     ig: { url: "https://instagram.com/zhu.ziyuan", handle: "@zhu.ziyuan", label: "Zoey" },
+    /* asked at sign-up, carried into the pairing: you meet your tension
+       twin and you can see what they're itching to make. */
+    dream: {
+      eyebrow: "WHAT DO YOU WANT TO MAKE?",
+      hint: "…that nobody asked you for.",
+      placeholder: "the thing nobody asked for",
+      required: true,
+      max: 120,
+    },
   },
 };
 

@@ -9,7 +9,7 @@ import { WaveChart } from "./components/WaveChart";
 import { TiltMeter } from "./components/TiltMeter";
 import { useTilt } from "./hooks/useTilt";
 import { useShake } from "./hooks/useShake";
-import { useQuestions } from "./lib/hooks";
+import { useEvent, useQuestions } from "./lib/hooks";
 import { downscaleImage } from "./lib/image";
 
 /* shared page-transition wrapper */
@@ -51,8 +51,10 @@ export function Chrome({ part, progress = [], children, bgSeed = 7, onBack }) {
 /* CREATE SPECIMEN — name + handle + passcode + image        */
 /* ========================================================= */
 export function CreateSpecimen({ onCreate, onBack, existing, cta = "Enter →" }) {
+  const ev = useEvent();
   const [name, setName] = useState(existing?.name || "");
   const [passcode, setPasscode] = useState("");
+  const [dream, setDream] = useState(existing?.dream || "");
   const [image, setImage] = useState(existing?.image || null);
   const camRef = useRef(null);
   const upRef = useRef(null);
@@ -64,7 +66,11 @@ export function CreateSpecimen({ onCreate, onBack, existing, cta = "Enter →" }
     r.readAsDataURL(file);
   };
 
-  const ready = name.trim().length > 0 && passcode.trim().length >= 4;
+  const wantsDream = !!ev.dream;
+  const ready =
+    name.trim().length > 0 &&
+    passcode.trim().length >= 4 &&
+    (!wantsDream || !ev.dream.required || dream.trim().length > 2);
 
   return (
     <Chrome part="SPECIMEN.lab" progress={[]} bgSeed={5} onBack={onBack}>
@@ -89,13 +95,33 @@ export function CreateSpecimen({ onCreate, onBack, existing, cta = "Enter →" }
         <input className="field field--big" placeholder="what should we call you?" value={name} maxLength={24} onChange={(e) => setName(e.target.value)} />
       </label>
 
+      {wantsDream && (
+        <label className="stack gap-8" style={{ marginTop: 14 }}>
+          <span className="eyebrow">{ev.dream.eyebrow}</span>
+          <span className="dream-hint mono">{ev.dream.hint}</span>
+          <textarea
+            className="field"
+            rows={2}
+            style={{ resize: "none" }}
+            placeholder={ev.dream.placeholder}
+            value={dream}
+            maxLength={ev.dream.max || 120}
+            onChange={(e) => setDream(e.target.value)}
+          />
+        </label>
+      )}
+
       <label className="stack gap-8" style={{ marginTop: 14 }}>
         <span className="eyebrow">PASSCODE</span>
         <input className="field" type="text" placeholder="min 4 chars — re-open your ID later" value={passcode} maxLength={24} onChange={(e) => setPasscode(e.target.value)} />
       </label>
 
       <div className="footer-actions">
-        <button className="btn btn-primary" disabled={!ready} onClick={() => onCreate({ name: name.trim(), passcode: passcode.trim(), image })}>
+        <button
+          className="btn btn-primary"
+          disabled={!ready}
+          onClick={() => onCreate({ name: name.trim(), passcode: passcode.trim(), dream: dream.trim(), image })}
+        >
           {cta}
         </button>
       </div>
@@ -205,11 +231,24 @@ export function Twin({ twin, shared, total, reason, onHome, onBack }) {
           reason={reason || `“${twin?.idea || "still forming an idea"}” — go say hello.`}
         />
       </div>
+      <DreamNote person={twin} />
       <div className="footer-actions">
         <button className="btn btn-primary" onClick={onHome}>Done — back to the menu →</button>
         <span className="mono" style={{ opacity: 0.5, textAlign: "center" }}>tap the card to flip it</span>
       </div>
     </Chrome>
+  );
+}
+
+/* what they want to make — shown wherever a specimen is revealed */
+export function DreamNote({ person, label = "WANTS TO MAKE" }) {
+  if (!person?.dream) return null;
+  return (
+    <div className="dream-note">
+      <span className="eyebrow">{label}</span>
+      <p className="dream-note__text">“{person.dream}”</p>
+      <span className="mono dream-note__foot">nobody asked them for it — ask them about it</span>
+    </div>
   );
 }
 

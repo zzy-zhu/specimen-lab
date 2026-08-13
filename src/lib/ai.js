@@ -144,7 +144,10 @@ export async function describeTwin(me, twin, shared, total) {
   const local = `You and ${twin.name} leaned the same way on ${shared}/${total} tensions — the same current runs through you both.`;
   if (!API_KEY) return { reason: local };
   try {
-    const prompt = `Two people at Specimen.lab were paired by their instincts — they answered the same either/or "creative tension" questions and agreed on ${shared} of ${total}. Write ONE short, vivid, slightly mystical sentence (name ${twin.name}) about why they resonate. Return just the sentence.`;
+    const prompt = `Two people at Specimen.lab were paired by their instincts — they answered the same either/or "creative tension" questions and agreed on ${shared} of ${total}. Write ONE short, vivid, slightly mystical sentence (name ${twin.name}) about why they resonate. If both want to make something, connect the two.
+ME: wants to make="${me?.dream || me?.idea || ""}"
+THEM: name="${twin.name}" wants to make="${twin.dream || twin.idea || ""}"
+Return just the sentence.`;
     const text = await callClaude(prompt, 160);
     return { reason: text.trim() || local, source: "claude" };
   } catch (e) {

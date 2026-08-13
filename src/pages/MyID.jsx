@@ -82,7 +82,8 @@ export function MyID() {
 
       <span className="step-tag">YOUR SPECIMEN</span>
       <motion.div style={{ marginTop: 14 }} initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}>
-        <NameCard person={{ ...me, role: `@${me.handle}` }} image={me.image} variant="self" caption={me.idea ? `“${me.idea}”` : "idea not captured yet"} />
+        <NameCard person={{ ...me, role: `@${me.handle}` }} image={me.image} variant="self"
+          caption={me.dream ? `wants to make: “${me.dream}”` : me.idea ? `“${me.idea}”` : "idea not captured yet"} />
       </motion.div>
 
       <div className="id-progress">

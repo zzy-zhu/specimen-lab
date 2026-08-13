@@ -18,6 +18,36 @@ function tensionShared(a = [], b = []) {
   for (let i = 0; i < n; i++) if (a[i] === b[i]) s++;
   return s;
 }
+/* instinct thread: most of the tensions they both answered agree.
+   Relative, so it works for a 3-question night and a 4-question one. */
+function sameInstincts(a, b) {
+  const n = Math.min(a.answers?.length || 0, b.answers?.length || 0);
+  if (n < 2) return false;
+  // 2 of 3 on a short night, 3 of 4 on a long one
+  return tensionShared(a.answers, b.answers) >= Math.max(2, Math.ceil(n * 0.66));
+}
+const isTwin = (a, b) => a.twin?.id === b.id || b.twin?.id === a.id;
+
+/* what threads a specimen to the rest of the room, strongest first.
+   Shared by the map's list and the graph so they never disagree. */
+export function connectionsFor(people, meId) {
+  const me = people.find((p) => p.id === meId);
+  if (!me) return [];
+  return people
+    .filter((p) => p.id !== meId)
+    .map((p) => {
+      if (isTwin(me, p)) return { person: p, kind: "twin", label: "creative twin", w: 3 };
+      if (sameInstincts(me, p)) return { person: p, kind: "instinct", label: "same instincts", w: 2 };
+      if (me.shake != null && p.shake != null && Math.abs(me.shake - p.shake) < 1.4)
+        return { person: p, kind: "rhythm", label: "same rhythm", w: 1.5 };
+      const mine = themeFor(`${me.idea} ${me.tech} ${me.dream}`).key;
+      if (themeFor(`${p.idea} ${p.tech} ${p.dream}`).key === mine && (p.dream || p.idea))
+        return { person: p, kind: "theme", label: "making something adjacent", w: 1 };
+      return null;
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.w - a.w);
+}
 
 export function WoodWideWeb({ people, meId, dark = false, onNodeTap }) {
   const W = 460;
@@ -30,7 +60,7 @@ export function WoodWideWeb({ people, meId, dark = false, onNodeTap }) {
     // cluster by theme into angular sectors, spiral outwards within
     const perTheme = {};
     return list.map((p) => {
-      const key = themeFor(`${p.idea} ${p.tech}`).key;
+      const key = themeFor(`${p.idea} ${p.tech} ${p.dream}`).key;
       perTheme[key] = (perTheme[key] || 0) + 1;
       const ti = themeIndex(key);
       const base = (ti / THEME_SEEDS.length) * Math.PI * 2;
@@ -55,9 +85,10 @@ export function WoodWideWeb({ people, meId, dark = false, onNodeTap }) {
         const b = nodes[j];
         let w = 0;
         let kind = "";
-        if (a.key === b.key) { w = 0.6; kind = "theme"; }
+        if (a.key === b.key && (a.dream || a.idea) && (b.dream || b.idea)) { w = 0.6; kind = "theme"; }
         if (a.shake != null && b.shake != null && Math.abs(a.shake - b.shake) < 1.4) { w = 1; kind = "rhythm"; }
-        if (tensionShared(a.answers, b.answers) >= 3) { w = 1.2; kind = "instinct"; }
+        if (sameInstincts(a, b)) { w = 1.2; kind = "instinct"; }
+        if (isTwin(a, b)) { w = 2; kind = "twin"; } // the host's pairing — the strongest thread
         if (w > 0) out.push({ a, b, w, kind, mine: a.me || b.me });
       }
     }
@@ -68,7 +99,7 @@ export function WoodWideWeb({ people, meId, dark = false, onNodeTap }) {
       .filter((e) => {
         perNode[e.a.id] = (perNode[e.a.id] || 0) + 1;
         perNode[e.b.id] = (perNode[e.b.id] || 0) + 1;
-        return e.mine || (perNode[e.a.id] <= 3 && perNode[e.b.id] <= 3);
+        return e.kind === "twin" || e.mine || (perNode[e.a.id] <= 3 && perNode[e.b.id] <= 3);
       });
   }, [nodes]);
 
@@ -97,8 +128,9 @@ export function WoodWideWeb({ people, meId, dark = false, onNodeTap }) {
               key={i}
               d={d}
               fill="none"
-              stroke={e.mine ? strokeMine : stroke}
-              strokeWidth={e.mine ? 1.4 : e.w * 0.8}
+              stroke={e.mine || e.kind === "twin" ? strokeMine : stroke}
+              strokeWidth={e.kind === "twin" ? 1.6 : e.mine ? 1.4 : e.w * 0.8}
+              strokeDasharray={e.kind === "twin" ? "4 3" : undefined}
               initial={{ pathLength: 0, opacity: 0 }}
               animate={{ pathLength: 1, opacity: 1 }}
               transition={{ duration: 1.1, delay: 0.2 + i * 0.03, ease: "easeInOut" }}

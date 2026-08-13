@@ -871,6 +871,57 @@
 }
 .map-card { position: absolute; left: 22px; right: 22px; bottom: 22px; z-index: 6; }
 
+/* ---- attendee map: legend, threads, dreams ---- */
+.map-screen { overflow-y: auto; }
+.map-screen .map-viewport { flex: none; height: 46vh; min-height: 300px; }
+.map-legend {
+  display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+  margin-top: 10px; font-size: 9px; color: rgba(247,245,243,0.6);
+}
+.map-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.thread { width: 16px; height: 0; border-top: 2px solid rgba(30,234,219,0.55); display: inline-block; }
+.thread--twin { border-top-style: dashed; border-color: var(--red); }
+.thread--instinct { border-color: var(--aqua); }
+.thread--rhythm { border-color: rgba(30,234,219,0.5); border-top-style: dotted; }
+.thread--theme { border-color: rgba(247,245,243,0.45); }
+
+.map-section { margin-top: 22px; }
+.thread-list, .dream-list { list-style: none; margin-top: 10px; display: flex; flex-direction: column; gap: 2px; }
+.thread-row {
+  width: 100%; display: flex; align-items: center; gap: 10px; text-align: left;
+  padding: 10px 4px; border-bottom: 1px solid rgba(247,245,243,0.1); color: var(--white);
+}
+.thread-row__name { flex: 1; font-size: 15px; }
+.thread-row__kind { font-size: 9px; color: var(--aqua); text-transform: uppercase; letter-spacing: 0.08em; }
+
+.dream-row {
+  width: 100%; display: flex; flex-direction: column; gap: 6px; text-align: left;
+  padding: 12px 4px; border-bottom: 1px solid rgba(247,245,243,0.1); color: var(--white);
+}
+.dream-row__who { display: flex; align-items: center; gap: 8px; }
+.dream-row__img {
+  width: 26px; height: 26px; border-radius: 50%; overflow: hidden; flex: none;
+  background: #12161a; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: rgba(247,245,243,0.6);
+}
+.dream-row__img img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); }
+.dream-row__name { font-size: 10px; color: var(--aqua); letter-spacing: 0.06em; }
+.dream-row__text { font-size: 15px; line-height: 1.35; color: rgba(247,245,243,0.9); }
+.dream-list__empty { padding: 12px 4px; color: rgba(247,245,243,0.45); font-size: 11px; }
+
+/* ---- what you want to make ---- */
+.dream-hint { font-size: 10px; color: rgba(10,10,10,0.5); margin-top: -4px; }
+.screen--space .dream-hint { color: rgba(247,245,243,0.5); }
+.dream-note {
+  margin-top: 14px; padding: 14px; border-left: 2px solid var(--red);
+  background: rgba(229,36,28,0.06);
+}
+.dream-note__text { font-size: 17px; line-height: 1.35; margin-top: 6px; }
+.dream-note__foot { display: block; margin-top: 8px; font-size: 9px; opacity: 0.55; }
+.screen--space .dream-note__text { color: var(--white); }
+
+.matches-dream { color: rgba(247,245,243,0.75); font-size: 13px; max-width: 320px; }
+
 /* ---- monitor: full-width swarm during exercise 01 ---- */
 .monitor__swarm--full { flex: 1; min-height: 0; margin: 12px 0; }
 

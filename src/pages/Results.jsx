@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { DreamNote } from "../screens";
 import { FlipCard } from "../components/FlipCard";
 import { NameCard } from "../components/NameCard";
 import { WaveChart } from "../components/WaveChart";
@@ -84,11 +85,17 @@ export function Results() {
             You agreed on {me.twin?.shared ?? twinLocal?.shared}/{me.twin?.total ?? twinLocal?.total ?? QUESTIONS.length} tensions.
           </p>
           {storedTwin?.name ? (
-            <FlipCard person={storedTwin} image={storedTwin.image} variant="twin"
-              reason={twinReason || `“${storedTwin.idea || "still forming an idea"}”`} autoFlipMs={700} />
+            <>
+              <FlipCard person={storedTwin} image={storedTwin.image} variant="twin"
+                reason={twinReason || `“${storedTwin.idea || "still forming an idea"}”`} autoFlipMs={700} />
+              <DreamNote person={storedTwin} />
+            </>
           ) : twinLocal?.twin ? (
-            <FlipCard person={twinLocal.twin} image={twinLocal.twin.image} variant="twin"
-              reason={twinReason || `“${twinLocal.twin.idea || "still forming an idea"}”`} autoFlipMs={700} />
+            <>
+              <FlipCard person={twinLocal.twin} image={twinLocal.twin.image} variant="twin"
+                reason={twinReason || `“${twinLocal.twin.idea || "still forming an idea"}”`} autoFlipMs={700} />
+              <DreamNote person={twinLocal.twin} />
+            </>
           ) : (
             <p className="lede" style={{ color: "rgba(247,245,243,0.6)" }}>No twin yet — you may be the only one who has answered.</p>
           )}

@@ -56,6 +56,7 @@ function Dashboard() {
   const [view, setView] = useState("menu"); // menu | users | tension | lab | labbie | matches | opentab
   const [ai, setAi] = useState(null);
   const [mq, setMq] = useState("");
+  const [back, setBack] = useState(null); // where a sub-view was opened from
 
   const QUESTIONS = ev.questions;
   const st = session.state;
@@ -73,7 +74,7 @@ function Dashboard() {
      persisted — peeking here never turns this browser into an attendee,
      and leaving the monitor puts this device back on its own event. */
   const homeEvent = useRef(getEventId());
-  const openEvent = (id, next) => { setActiveEvent(id, { persist: false }); setView(next); };
+  const openEvent = (id, next) => { setActiveEvent(id, { persist: false }); setBack(null); setView(next); };
   const goMenu = () => openEvent(EVENTS.la.id, "menu");
   useEffect(() => {
     setActiveEvent(EVENTS.la.id, { persist: false }); // the dashboard opens on the LA room
@@ -124,11 +125,12 @@ function Dashboard() {
       return {
         id: p.id, name: p.name || "—", handle: p.handle,
         twinName: t?.name || "—", shared: t?.shared ?? 0, total: t?.total ?? QUESTIONS.length,
-        idea: p.idea, shake: p.shake,
+        twinDream: t?.dream || room.find((o) => o.id === t?.id)?.dream || "",
+        dream: p.dream, idea: p.idea, shake: p.shake,
       };
     }).sort((a, b) => a.name.localeCompare(b.name));
-  }, [answered, QUESTIONS.length]);
-  const filteredRows = matchRows.filter((r) => !mq || (r.name + r.twinName).toLowerCase().includes(mq.toLowerCase()));
+  }, [answered, room, QUESTIONS.length]);
+  const filteredRows = matchRows.filter((r) => !mq || (r.name + r.twinName + r.dream).toLowerCase().includes(mq.toLowerCase()));
 
   // ---- header (shared) ----
   const Header = () => (
@@ -224,7 +226,10 @@ function Dashboard() {
       {view === "users" && (
         <div className="monitor__grid">
           <section className="monitor__web">
-            <span className="panel-tag mono">CONNECTION MAP — {room.length} specimens</span>
+            <span className="panel-tag mono">
+              CONNECTION MAP — {room.length} specimens
+              {back && <button className="backchip mono" style={{ marginLeft: 12 }} onClick={() => setView(back)}>↩ back to {back}</button>}
+            </span>
             {room.length ? <WoodWideWeb people={room} dark /> : <Empty text="No specimens registered yet." />}
           </section>
           <section className="monitor__side monitor__cards">
@@ -233,7 +238,7 @@ function Dashboard() {
               <div className="mon-card-grid">
                 {room.map((p) => (
                   <NameCard key={p.id} person={{ ...p, role: `@${p.handle}` }} image={p.image} variant="self"
-                    caption={p.idea ? `“${p.idea}”` : undefined} />
+                    caption={p.dream ? `wants to make: “${p.dream}”` : p.idea ? `“${p.idea}”` : undefined} />
                 ))}
               </div>
             ) : <Empty text="Cards appear here as people join." />}
@@ -255,6 +260,7 @@ function Dashboard() {
             view === "opentab" ? (
               <div className="mon-note">
                 <span className="mono">access code · <b>{ev.code}</b> — this room is separate from Specimen.lab LA</span>
+                <button className="host-btn" onClick={() => { setBack("opentab"); setView("users"); }}>◍ Attendee map — who's connected</button>
                 <button className="host-btn" onClick={() => setSession({ reveal: !session.reveal })}>
                   {session.reveal ? "🔓 archive visible — hide it" : "🔒 reveal the Specimen.lab archive"}
                 </button>
@@ -394,9 +400,15 @@ function TensionStage({ questions, room, st, q, tphase, count, answeredQ, onFini
 
 function MatchesTable({ rows }) {
   if (!rows.length) return <Empty text="No matches yet — nobody has finished Creative Tension." />;
+  const anyDream = rows.some((r) => r.dream);
   return (
     <table className="matches-table">
-      <thead><tr><th>Specimen</th><th></th><th>Creative twin</th><th>Aligned</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Specimen</th><th></th><th>Creative twin</th><th>Aligned</th>
+          {anyDream && <th>Wants to make</th>}
+        </tr>
+      </thead>
       <tbody>
         {rows.map((r) => (
           <tr key={r.id}>
@@ -404,6 +416,7 @@ function MatchesTable({ rows }) {
             <td className="matches-arrow">⇄</td>
             <td className="matches-twin">{r.twinName}</td>
             <td className="matches-score mono">{r.shared}/{r.total}</td>
+            {anyDream && <td className="matches-dream">{r.dream ? `“${r.dream}”` : "—"}</td>}
           </tr>
         ))}
       </tbody>

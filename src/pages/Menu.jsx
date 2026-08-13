@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Wordmark } from "../components/Wordmark";
 import { useScene } from "../lib/atmosphere";
-import { useEvent, useMe, useSession } from "../lib/hooks";
+import { useEvent, useMe, useRoom, useSession } from "../lib/hooks";
 import { usePresence } from "../hooks/usePresence";
 import { isSessionUnlocked } from "../lib/store";
 
@@ -24,6 +24,7 @@ export function Menu() {
   const nav = useNavigate();
   const { me } = useMe();
   const ev = useEvent();
+  const room = useRoom();
   const session = useSession();
   usePresence(me?.id, !!me); // headshot drifts on the monitor as you move
 
@@ -88,6 +89,16 @@ export function Menu() {
           <span className="exp-card__go">→</span>
         </motion.button>
       )}
+
+      <motion.button variants={rise} className="exp-card" style={{ marginTop: 12 }} onClick={() => nav("/map")}>
+        <span className="exp-card__no mono">◍</span>
+        <div className="exp-card__body">
+          <h2>The attendee map</h2>
+          <p>Everyone in the room, and the threads between you — who leans like you, and what they want to make.</p>
+          <span className="exp-card__meta mono">{room.length} {room.length === 1 ? "specimen" : "specimens"} connected</span>
+        </div>
+        <span className="exp-card__go">→</span>
+      </motion.button>
 
       <motion.div variants={rise} className="menu-extra">
         {revealed && <button className="btn btn-ghost" onClick={() => nav("/artists")}>Today's artists →</button>}
